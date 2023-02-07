@@ -12,6 +12,12 @@ on:
     java-distribution:
       required: true
       type: string
+<<<<<<< HEAD
+=======
+    cloud-provider:
+      required: true
+      type: string
+>>>>>>> 32ae7dd (init)
     azure-aks-resource-group:
       required: true
       type: string
