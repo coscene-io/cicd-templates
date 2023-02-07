@@ -1,0 +1,70 @@
+name: Demo template for environment setup of Java build
+
+on:
+  workflow_call:
+  inputs:
+    environment:
+      required: true
+      type: string
+    java-version:
+      required: true
+      type: string
+    java-distribution:
+      required: true
+      type: string
+    azure-aks-resource-group:
+      required: true
+      type: string
+    azure-aks-cluster-name:
+      required: true
+      type: string
+    need-cd-tools:
+      required: true
+      type: boolean
+  secrets:
+    GH_PACKAGES_ORG_USERNAME:
+      required: true
+    GH_PACKAGES_ORG_TOKEN:
+      required: true
+    AZURE_CLIENT_ID:
+      required: true
+    AZURE_TENANT_ID:
+      required: true
+    AZURE_SUBSCRIPTION_ID:
+      required: true
+    AZURE_REGISTRY_LOGIN_SERVER:
+      required: true
+    AZURE_REGISTRY_PASSWORD:
+      required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK ${{ input.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ input.java-version }}
+          distribution: ${{ input.java-distribution }}
+      - name: Gradle build
+        uses: gradle/gradle-build-action@v2
+        env:
+          REPOSITORY_USERNAME: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
+          REPOSITORY_TOKEN: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
+        with:
+          arguments: build -x test -x check --stacktrace
+      - name: Setup CD workspace all in one
+        uses: coscene-io/setup-cd-workspace-all-in-one@v1.1.0
+        with:
+          cloud-provider: Azure
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          acr-login-registry: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          acr-username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          acr-password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+          azure-aks-resource-group: ${{ inputs.azure-aks-resource-group }}
+          azure-aks-cluster-name: ${{ inputs.azure-aks-cluster-name }}
+          need-cd-tools: ${{ inputs.need-cd-tools }}
