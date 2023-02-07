@@ -2,43 +2,43 @@ name: Demo template for environment setup of Java build
 
 on:
   workflow_call:
-  inputs:
-    environment:
-      required: true
-      type: string
-    java-version:
-      required: true
-      type: string
-    java-distribution:
-      required: true
-      type: string
-    cloud-provider:
-      required: true
-      type: string
-    azure-aks-resource-group:
-      required: true
-      type: string
-    azure-aks-cluster-name:
-      required: true
-      type: string
-    need-cd-tools:
-      required: true
-      type: boolean
-  secrets:
-    GH_PACKAGES_ORG_USERNAME:
-      required: true
-    GH_PACKAGES_ORG_TOKEN:
-      required: true
-    AZURE_CLIENT_ID:
-      required: true
-    AZURE_TENANT_ID:
-      required: true
-    AZURE_SUBSCRIPTION_ID:
-      required: true
-    AZURE_REGISTRY_LOGIN_SERVER:
-      required: true
-    AZURE_REGISTRY_PASSWORD:
-      required: true
+    inputs:
+      environment:
+        required: true
+        type: string
+      java-version:
+        required: true
+        type: string
+      java-distribution:
+        required: true
+        type: string
+      cloud-provider:
+        required: true
+        type: string
+      azure-aks-resource-group:
+        required: true
+        type: string
+      azure-aks-cluster-name:
+        required: true
+        type: string
+      need-cd-tools:
+        required: true
+        type: boolean
+    secrets:
+      GH_PACKAGES_ORG_USERNAME:
+        required: true
+      GH_PACKAGES_ORG_TOKEN:
+        required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_REGISTRY_LOGIN_SERVER:
+        required: true
+      AZURE_REGISTRY_PASSWORD:
+        required: true
 
 jobs:
   build:
