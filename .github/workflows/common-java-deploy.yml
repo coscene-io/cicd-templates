@@ -1,12 +1,9 @@
-name: common deploy
+name: Common Java deploy
 
 on:
   workflow_call:
     inputs:
       project:
-        required: true
-        type: string
-      profile:
         required: true
         type: string
     secrets:
@@ -154,7 +151,7 @@ jobs:
           msg_type: text
           content: |
             text: |
-              A new version of ${{ inputs.project }} has been deployed to ${{ inputs.profile }}.
+              A new version of ${{ inputs.project }} has been deployed.
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
@@ -187,7 +184,7 @@ jobs:
           msg_type: text
           content: |
             text: |
-              A new version of ${{ inputs.project }} image has been published to ${{ inputs.profile }}.
+              A new version of ${{ inputs.project }} image has been published.
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
