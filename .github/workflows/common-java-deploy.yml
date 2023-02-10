@@ -4,8 +4,18 @@ on:
   workflow_call:
     inputs:
       project:
+        description: 'the name of project to be built and the corresponding image (first-image)'
         required: true
         type: string
+      second-image:
+        description: 'optional, for coping with the need to push the second type image'
+        required: false
+        type: string
+      third-image:
+        description: 'optional, for coping with the need to push the third type image '
+        required: false
+        type: string
+
     secrets:
       GH_PACKAGES_ORG_USERNAME:
         required: true
@@ -174,6 +184,21 @@ jobs:
           echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:$tag" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
+      - name: the second image summary (if exists)
+        if: inputs.second-image != ''
+        run: |
+          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY'
+      - name: the third image summary (if exists)
+        if: inputs.third-image != ''
+        run: |
+          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
+
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         if: needs.build.result == 'success'
