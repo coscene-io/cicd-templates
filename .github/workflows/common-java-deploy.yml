@@ -17,7 +17,7 @@ on:
         type: string
       sub-chart:
         description: 'the name of sub chart'
-        required: success
+        required: true
         type: string
 
     secrets:
