@@ -15,6 +15,10 @@ on:
         description: 'optional, for coping with the need to push the third type image '
         required: false
         type: string
+      sub-chart:
+        description: 'the name of sub chart'
+        required: success
+        type: string
 
     secrets:
       GH_PACKAGES_ORG_USERNAME:
@@ -33,9 +37,14 @@ on:
         required: true
       FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND:
         required: true
+
     outputs:
       tag:
         value: ${{ jobs.build.outputs.tag }}
+
+env:
+  AZURE: coseus.azurecr.io
+  ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
 
 jobs:
   build:
@@ -80,19 +89,23 @@ jobs:
           echo $withoutDigest
           echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
 
-  copy-image-to-aliyun:
-    needs: build
+  copy-first-image-to-aliyun:
+    needs: [ build ]
     runs-on: [ self-hosted ]
     timeout-minutes: 5
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         env:
+          AZURE: coseus.azurecr.io
+          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
           http_proxy: http://gfw:7890
           https_proxy: http://gfw:7890
         with:
-          src-image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}
-          dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
@@ -102,34 +115,145 @@ jobs:
           http_proxy: http://gfw:7890
           https_proxy: http://gfw:7890
         with:
-          src-image: coseus.azurecr.io/${{ inputs.project }}:latest
-          dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
-  sync-fallback:
-    needs: [ build, copy-image-to-aliyun ]
+  sync-fallback-for-first-image:
+    needs: [ build, copy-first-image-to-aliyun ]
+    if: always() && needs.copy-first-image-to-aliyun.result != 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: always() && needs.copy-image-to-aliyun.result != 'success'
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
-          src-image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}
-          dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy latest
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+  copy-second-image-to-aliyun:
+    needs: [ build ]
+    if: inputs.second-image != ''
+    runs-on: [ self-hosted ]
+    timeout-minutes: 5
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        env:
+          http_proxy: http://gfw:7890
+          https_proxy: http://gfw:7890
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.second-image }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.second-image }}:${{ env.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        env:
+          http_proxy: http://gfw:7890
+          https_proxy: http://gfw:7890
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.second-image }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.second-image }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+  sync-fallback-for-second-image:
+    needs: [ build, copy-second-image-to-aliyun ]
+    if: always() && inputs.second-image != '' && needs.copy-second-image-to-aliyun.result != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.second-image }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.second-image }}:${{ env.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy latest
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.second-image }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.second-image }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+  copy-third-image-to-aliyun:
+    if: inputs.third-image != ''
+    needs: [ build ]
+    runs-on: [ self-hosted ]
+    timeout-minutes: 5
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        env:
+          http_proxy: http://gfw:7890
+          https_proxy: http://gfw:7890
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.third-image }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.third-image }}:${{ env.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        env:
+          http_proxy: http://gfw:7890
+          https_proxy: http://gfw:7890
+        with:
+          src-image: coseus.azurecr.io/${{ inputs.third-image }}:latest
+          dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+  sync-fallback-for-third-image:
+    needs: [ build, copy-third-image-to-aliyun ]
+    if: always() && inputs.third-image != '' && needs.copy-third-image-to-aliyun.result != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.third-image }}:${{ env.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.third-image }}:${{ env.TAG }}
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
       - name: Skopeo Copy latest
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
-          src-image: coseus.azurecr.io/${{ inputs.project }}:latest
-          dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest
+          src-image: ${{ env.AZURE }}/${{ inputs.third-image }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.third-image }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
+
   deploy:
-    needs: build
+    needs: [ build ]
     runs-on: ubuntu-latest
     environment: azure-dev-east-us
     steps:
@@ -151,7 +275,7 @@ jobs:
           helm repo add coscene git+https://$REPOSITORY_TOKEN@github.com/coscene-io/chart@\?ref=main
       - name: Helm Upgrade
         run: |
-          helm upgrade -n coscene --reuse-values coscene coscene/coscene --set data-platform-server.rollout=$GITHUB_SHA
+          helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         with:
@@ -165,11 +289,21 @@ jobs:
               baseRef: ${{ github.ref }}
 
   callout:
-    runs-on: ubuntu-latest
-    needs: [ build, copy-image-to-aliyun, sync-fallback ]
+    needs: [
+      build,
+      copy-first-image-to-aliyun,
+      sync-fallback-for-first-image,
+      copy-second-image-to-aliyun,
+      sync-fallback-for-second-image,
+      copy-third-image-to-aliyun,
+      sync-fallback-for-third-image
+    ]
     if: |
       always() && needs.build.result == 'success' &&
       (needs.copy-image-to-aliyun.result == 'success' || needs.sync-fallback.result == 'success')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
     steps:
       - name: Add summary
         run: |
@@ -177,24 +311,27 @@ jobs:
           echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME" >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_ACTOR: $GITHUB_ACTOR" >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_REF: $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
-          echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the second image summary (if exists)
-        if: success() && inputs.second-image != ''
+        if: | 
+          success() && 
+          (need.copy-second-image-to-aliyun.result == 'success' || 
+          needs.sync-fallback-for-second-image.result == 'success')
         run: |
-          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.second-image }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.second-image }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the third image summary (if exists)
         if: success() && inputs.third-image != ''
         run: |
-          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.third-image }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.third-image }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         with:
@@ -206,7 +343,7 @@ jobs:
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
-              Azure image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}
-              Azure image: coseus.azurecr.io/${{ inputs.project }}:latest
-              AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}
-              AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
