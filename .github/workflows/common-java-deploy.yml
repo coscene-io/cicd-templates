@@ -318,7 +318,7 @@ jobs:
       - name: the second image summary (if exists)
         if: | 
           success() && 
-          (need.copy-second-image-to-aliyun.result == 'success' || 
+          (needs.copy-second-image-to-aliyun.result == 'success' || 
           needs.sync-fallback-for-second-image.result == 'success')
         run: |
           echo "Azure image: $AZURE/${{ inputs.second-image }}:$TAG" >> $GITHUB_STEP_SUMMARY
