@@ -111,11 +111,10 @@ jobs:
     needs: [ build, copy-image-to-aliyun ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: always()
+    if: always() && needs.copy-image-to-aliyun.result != 'success'
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        if: needs.copy-image-to-aliyun.result != 'success'
         with:
           src-image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}
           dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}
@@ -123,7 +122,6 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
       - name: Skopeo Copy latest
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        if: needs.copy-image-to-aliyun.result != 'success'
         with:
           src-image: coseus.azurecr.io/${{ inputs.project }}:latest
           dst-image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest
@@ -161,7 +159,7 @@ jobs:
           msg_type: text
           content: |
             text: |
-              A new version of ${{ inputs.project }} has been deployed.
+              A new version of ${{ github.repository }} has been deployed.
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
@@ -169,10 +167,11 @@ jobs:
   callout:
     runs-on: ubuntu-latest
     needs: [ build, copy-image-to-aliyun, sync-fallback ]
-    if: always()
+    if: |
+      always() && needs.build.result == 'success' &&
+      (needs.copy-image-to-aliyun.result == 'success' || needs.sync-fallback.result == 'success')
     steps:
       - name: Add summary
-        if: needs.common-deploy.result == 'success'
         run: |
           echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME" >> $GITHUB_STEP_SUMMARY
@@ -183,23 +182,21 @@ jobs:
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the second image summary (if exists)
-        if: inputs.second-image != ''
+        if: success() && inputs.second-image != ''
         run: |
           echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the third image summary (if exists)
-        if: inputs.third-image != ''
+        if: success() && inputs.third-image != ''
         run: |
           echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
-
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
-        if: needs.build.result == 'success'
         with:
           url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
           msg_type: text
