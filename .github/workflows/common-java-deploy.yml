@@ -188,7 +188,7 @@ jobs:
           echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY'
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the third image summary (if exists)
         if: inputs.third-image != ''
         run: |
@@ -205,7 +205,7 @@ jobs:
           msg_type: text
           content: |
             text: |
-              A new version of ${{ inputs.project }} image has been published.
+              A new version of ${{ github.repository }} image has been published.
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
