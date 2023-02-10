@@ -173,37 +173,33 @@ jobs:
     steps:
       - name: Add summary
         if: needs.common-deploy.result == 'success'
-        env:
-          tag: ${{ needs.build.outputs.tag }}
         run: |
           echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME" >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_ACTOR: $GITHUB_ACTOR" >> $GITHUB_STEP_SUMMARY
           echo "GITHUB_REF: $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
-          echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the second image summary (if exists)
         if: inputs.second-image != ''
         run: |
-          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.second-image }}:latest" >> $GITHUB_STEP_SUMMARY'
       - name: the third image summary (if exists)
         if: inputs.third-image != ''
         run: |
-          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Azure image: coseus.azurecr.io/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
-          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:$tag" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:${{ needs.build.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.third-image }}:latest" >> $GITHUB_STEP_SUMMARY
 
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         if: needs.build.result == 'success'
-        env:
-          tag: ${{ needs.build.outputs.tag }}
         with:
           url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
           msg_type: text
@@ -213,7 +209,7 @@ jobs:
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
-              Azure image: coseus.azurecr.io/${{ inputs.project }}:${{ env.tag }}
+              Azure image: coseus.azurecr.io/${{ inputs.project }}:${{ needs.build.outputs.tag }}
               Azure image: coseus.azurecr.io/${{ inputs.project }}:latest
-              AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ env.tag }}
+              AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:${{ needs.build.outputs.tag }}
               AliCloud image: registry.cn-hangzhou.aliyuncs.com/coscene/${{ inputs.project }}:latest
