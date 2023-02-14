@@ -1,0 +1,43 @@
+name: Tag availability check
+
+on:
+  workflow_call:
+    secrets:
+      VAULT_GITHUB_ROLE_ID:
+        required: true
+      GVAULT_GITHUB_SECRET_ID:
+        required: true
+    outputs:
+      token:
+        value: ${{ jobs.vault-login.token }}
+
+jobs:
+  vault-login:
+    runs-on: ubuntu-20.04
+    outputs:
+      token: ${{ steps.login.outputs.VAULT_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v1.2.0
+        with:
+          helmfile-version: "v0.148.1"
+          helm-version: "v3.10.2"
+          additional-helm-plugins: https://github.com/jkroepke/helm-secrets --version v4.2.1
+      - name: Setup vals
+        uses: jkroepke/setup-vals@v1
+        with:
+          version: 0.19.0
+      - name: Setup vault
+        uses: eLco/setup-vault@v1
+        with:
+          vault_version: 1.12.1
+      - name: Vault login
+        id: login
+        run: |
+          TOKEN=$(vault write auth/approle/login role_id=${VAULT_GITHUB_ROLE_ID} secret_id=${VAULT_GITHUB_SECRET_ID} | jq -r .auth.client_token)
+          echo "VAULT_TOKEN=${TOKEN}" >> $GITHUB_OUTPUT
+        env:
+          VAULT_GITHUB_ROLE_ID: ${{ secrets.VAULT_GITHUB_ROLE_ID }}
+          VAULT_GITHUB_SECRET_ID: ${{ secrets.VAULT_GITHUB_SECRET_ID }}
