@@ -8,12 +8,6 @@ on:
         required: true
         type: string
 
-    secrets:
-      VAULT_GITHUB_ROLE_ID:
-        required: true
-      GVAULT_GITHUB_SECRET_ID:
-        required: true
-
 env:
   VAULT_ADDR: https://vault-cluster-public-vault-ee647af1.6a5bfcd4.z1.hashicorp.cloud:8200
   VAULT_NAMESPACE: admin
