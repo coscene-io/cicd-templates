@@ -5,7 +5,7 @@ on:
     secrets:
       VAULT_GITHUB_ROLE_ID:
         required: true
-      VAULT_GITHUB_SECRET_ID:
+      GVAULT_GITHUB_SECRET_ID:
         required: true
     outputs:
       token:
@@ -35,9 +35,9 @@ jobs:
           vault_version: 1.12.1
       - name: Vault login
         id: login
-        env:
-          VAULT_GITHUB_ROLE_ID: ${{ secrets.VAULT_GITHUB_ROLE_ID }}
-          VAULT_GITHUB_SECRET_ID: ${{ secrets.VAULT_GITHUB_SECRET_ID }}
         run: |
           TOKEN=$(vault write auth/approle/login role_id=${VAULT_GITHUB_ROLE_ID} secret_id=${VAULT_GITHUB_SECRET_ID} | jq -r .auth.client_token)
           echo "VAULT_TOKEN=${TOKEN}" >> $GITHUB_OUTPUT
+        env:
+          VAULT_GITHUB_ROLE_ID: ${{ secrets.VAULT_GITHUB_ROLE_ID }}
+          VAULT_GITHUB_SECRET_ID: ${{ secrets.VAULT_GITHUB_SECRET_ID }}
