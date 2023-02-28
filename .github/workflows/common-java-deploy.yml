@@ -85,11 +85,11 @@ jobs:
     needs:
       - build
     runs-on: self-hosted
-    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
       - name: Skopeo Copy
+        timeout-minutes: 0.1
         uses: coscene-io/skopeo-copy-action@v1.0.0
         env:
           AZURE: coseus.azurecr.io
@@ -103,6 +103,7 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
       - name: Skopeo Copy
+        timeout-minutes: 0.1
         uses: coscene-io/skopeo-copy-action@v1.0.0
         env:
           http_proxy: http://gfw:7890
