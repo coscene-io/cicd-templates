@@ -4,9 +4,9 @@ on:
   workflow_call:
     outputs:
       success:
-        value: {{ jobs.ret-outputs.success }}
+        value: ${{ jobs.ret-outputs.success }}
       timeout:
-        value: {{ jobs.ret-outputs.timeout }}
+        value: ${{ jobs.ret-outputs.timeout }}
     inputs:
       project:
         description: 'the name of project to be built and the corresponding image'
