@@ -18,18 +18,15 @@ env:
 
 jobs:
   copy-image-to-aliyun:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 1
     continue-on-error: true
-    env:
-      http_proxy: http://gfw:7890
-      https_proxy: http://gfw:7890
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.tag }}
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
@@ -42,15 +39,17 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 1
-    continue-on-error: true
+    env:
+      http_proxy: http://gfw:7890
+      https_proxy: http://gfw:7890
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
