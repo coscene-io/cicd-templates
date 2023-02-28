@@ -4,9 +4,9 @@ on:
   workflow_call:
     outputs:
       success:
-        value: ${{ jobs.ret-outputs.success }}
+        value: ${{ jobs.ret-outputs.outputs.success }}
       timeout:
-        value: ${{ jobs.ret-outputs.timeout }}
+        value: ${{ jobs.ret-outputs.outputs.timeout }}
     inputs:
       project:
         description: 'the name of project to be built and the corresponding image'
@@ -24,7 +24,7 @@ env:
 jobs:
   copy-image-to-aliyun:
     runs-on: self-hosted
-    timeout-minutes: 0.5
+    timeout-minutes: 1
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
@@ -52,7 +52,7 @@ jobs:
 
   sync-fallback:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 1
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
@@ -71,19 +71,19 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   ret-output:
-    outputs:
-      success: ${{ steps.is-successful.outputs.result }}
-      timeout: ${{ steps.is-timout.outputs.result }}
     needs:
       - copy-image-to-aliyun
       - sync-fallback
     runs-on: ubuntu-latest
+    outputs:
+      success: ${{ steps.is-successful.outputs.is-success }}
+      timeout: ${{ steps.is-timout.outputs.is-timeout }}
     steps:
       - name: Success
-        id: is-successful
+        id: is-success
         if: needs.copy-image-to-aliyun.result == 'success' || needs.sync-fallback.result == 'success'
-        run: echo "result=true" >> $GITHUB_OUTPUT
+        run: echo "is-success=true" >> $GITHUB_OUTPUT
       - name: Timeout
         id: is-timeout
         if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.copy-image-to-aliyun.result == 'cancelled'
-        run: echo "result=true" >> $GITHUB_OUTPUT
+        run: echo "is-timeout=true" >> $GITHUB_OUTPUT
