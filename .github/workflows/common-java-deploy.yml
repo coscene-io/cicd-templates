@@ -12,24 +12,6 @@ on:
         required: true
         type: string
 
-#    secrets:
-#      GH_PACKAGES_ORG_USERNAME:
-#        required: true
-#      GH_PACKAGES_ORG_TOKEN:
-#        required: true
-#      ACR_ADMIN_USERNAME:
-#        required: true
-#      ACR_ADMIN_PASSWORD:
-#        required: true
-#      ACR_USERNAME:
-#        required: true
-#      ACR_PASSWORD:
-#        required: true
-#      AZURE_KUBE_CONFIG:
-#        required: true
-#      FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND:
-#        required: true
-
     outputs:
       tag:
         value: ${{ jobs.build.outputs.tag }}
@@ -131,12 +113,16 @@ jobs:
     needs:
       - build
       - cp-image-to-aliyun
-    if: |
-      needs.build.result == 'success' && needs.cp-image-to-aliyun.outputs.success == 'true'
+#    if: |
+#      needs.build.result == 'success' && needs.cp-image-to-aliyun.outputs.success == 'true'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
+      - name: debug
+        run: |
+          echo ${{ needs.cp-image-to-aliyun.outputs.success }}
+          echo ${{ needs.cp-image-to-aliyun.outputs.timeout }}
       - name: Add summary
         run: |
           echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY
@@ -147,18 +133,18 @@ jobs:
           echo "Azure image: $AZURE/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
-      - name: Notification to Feishu
-        uses: foxundermoon/feishu-action@v2
-        with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
-          msg_type: text
-          content: |
-            text: |
-              A new version of ${{ github.repository }} image has been published.
-              GitHubEvent: ${{ github.event_name }}
-              committer: ${{ github.actor }}
-              baseRef: ${{ github.ref }}
-              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
-              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
-              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+#      - name: Notification to Feishu
+#        uses: foxundermoon/feishu-action@v2
+#        with:
+#          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
+#          msg_type: text
+#          content: |
+#            text: |
+#              A new version of ${{ github.repository }} image has been published.
+#              GitHubEvent: ${{ github.event_name }}
+#              committer: ${{ github.actor }}
+#              baseRef: ${{ github.ref }}
+#              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+#              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+#              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+#              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
