@@ -122,6 +122,7 @@ jobs:
       - copy-image-to-aliyun
       - sync-fallback
     runs-on: ubuntu-latest
+    if: success() || cancelled()
     outputs:
       success: ${{ steps.is-success.outputs.is-success }}
       timeout: ${{ steps.is-timout.outputs.is-timeout }}
