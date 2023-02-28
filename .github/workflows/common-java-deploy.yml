@@ -114,15 +114,15 @@ jobs:
       - build
       - cp-image-to-aliyun
 #    if: |
-#      needs.build.result == 'success' && needs.cp-image-to-aliyun.outputs.success == 'true'
+#      needs.cp-image-to-aliyun.outputs.success == 'true'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
-      - name: debug
-        run: |
-          echo ${{ needs.cp-image-to-aliyun.outputs.success }}
-          echo ${{ needs.cp-image-to-aliyun.outputs.timeout }}
+#      - name: debug
+#        run: |
+#          echo ${{ needs.cp-image-to-aliyun.outputs.success }}
+#          echo ${{ needs.cp-image-to-aliyun.outputs.timeout }}
       - name: Add summary
         run: |
           echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY

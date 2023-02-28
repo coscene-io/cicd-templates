@@ -2,11 +2,6 @@ name: Copy image to aliyun
 
 on:
   workflow_call:
-    outputs:
-      success:
-        value: ${{ jobs.ret-outputs.outputs.success }}
-      timeout:
-        value: ${{ jobs.ret-outputs.outputs.timeout }}
     inputs:
       project:
         description: 'the name of project to be built and the corresponding image'
@@ -26,14 +21,12 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 1
     continue-on-error: true
+    env:
+      http_proxy: http://gfw:7890
+      https_proxy: http://gfw:7890
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
-          AZURE: coseus.azurecr.io
-          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
-#          http_proxy: http://gfw:7890
-#          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
@@ -42,9 +35,6 @@ jobs:
 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-#        env:
-#          http_proxy: http://gfw:7890
-#          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
@@ -53,11 +43,6 @@ jobs:
 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
-          AZURE: coseus.azurecr.io
-          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
-        #          http_proxy: http://gfw:7890
-        #          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
@@ -66,22 +51,13 @@ jobs:
 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        #        env:
-        #          http_proxy: http://gfw:7890
-        #          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
-
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
-          AZURE: coseus.azurecr.io
-          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
-        #          http_proxy: http://gfw:7890
-        #          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
@@ -90,17 +66,16 @@ jobs:
 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        #        env:
-        #          http_proxy: http://gfw:7890
-        #          https_proxy: http://gfw:7890
         with:
           src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
   sync-fallback:
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    continue-on-error: true
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
@@ -117,22 +92,45 @@ jobs:
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
-  ret-outputs:
-    continue-on-error: true
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+  judge-cancelled:
     needs:
       - copy-image-to-aliyun
       - sync-fallback
+    if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.sync-fallback.result == 'cancelled'
     runs-on: ubuntu-latest
-    outputs:
-      success: ${{ steps.is-success.outputs.is-success }}
-      timeout: ${{ steps.is-timout.outputs.is-timeout }}
     steps:
-      - name: Success
-        id: is-success
-        if: needs.copy-image-to-aliyun.result == 'success' || needs.sync-fallback.result == 'success'
-        run: echo "is-success=true" >> $GITHUB_OUTPUT
-      - name: Timeout
-        id: is-timeout
-        if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.copy-image-to-aliyun.result == 'cancelled'
-        run: echo "is-timeout=true" >> $GITHUB_OUTPUT
+      - name: cancel workflow
+        run: |
+          echo "Timeout!!! Check the network." >> $GITHUB_STEP_SUMMARY
+          exit 1
