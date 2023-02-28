@@ -35,7 +35,6 @@ env:
 
 jobs:
   copy-image-to-aliyun:
-    needs:
     runs-on: self-hosted
     timeout-minutes: 1
     steps:
@@ -64,7 +63,6 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback:
-    needs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
