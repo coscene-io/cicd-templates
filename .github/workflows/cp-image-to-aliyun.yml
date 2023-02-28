@@ -39,6 +39,8 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback:
+    needs:
+      - copy-image-to-aliyun
     runs-on: self-hosted
     timeout-minutes: 1
     env:
