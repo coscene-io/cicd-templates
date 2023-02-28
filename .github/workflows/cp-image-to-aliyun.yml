@@ -251,10 +251,12 @@ jobs:
     needs:
       - copy-image-to-aliyun
       - sync-fallback
-    if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.sync-fallback.result == 'cancelled'
+#    if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.sync-fallback.result == 'cancelled'
     runs-on: ubuntu-latest
     steps:
       - name: cancel workflow
         run: |
+          echo "${{needs.copy-image-to-aliyun.result}}"
+          echo "${{needs.sync-fallback.result}}"
           echo "Timeout!!! Check the network." >> $GITHUB_STEP_SUMMARY
           exit 1
