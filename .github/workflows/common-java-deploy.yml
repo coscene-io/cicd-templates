@@ -81,62 +81,14 @@ jobs:
           echo $withoutDigest
           echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
 
-  copy-image-to-aliyun:
+  cp-image-to-aliyun:
     needs:
       - build
-    runs-on: self-hosted
-    env:
-      TAG: ${{ needs.build.outputs.tag }}
-    steps:
-      - name: Skopeo Copy
-        timeout-minutes: 0.1
-        uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
-          AZURE: coseus.azurecr.io
-          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
-          http_proxy: http://gfw:7890
-          https_proxy: http://gfw:7890
-        with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
-          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
-
-      - name: Skopeo Copy
-        timeout-minutes: 0.1
-        uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
-          http_proxy: http://gfw:7890
-          https_proxy: http://gfw:7890
-        with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
-          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
-
-  sync-fallback:
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    env:
-      TAG: ${{ needs.build.outputs.tag }}
-    steps:
-      - name: Skopeo Copy
-        uses: coscene-io/skopeo-copy-action@v1.0.0
-        with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
-          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
-
-      - name: Skopeo Copy latest
-        uses: coscene-io/skopeo-copy-action@v1.0.0
-        with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
-          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+    uses: .github/workflows/cp-image-to-aliyun.yml@chore/del-redundant-inputs
+    with:
+      project: platform
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit
 
   deploy:
     needs:
@@ -178,12 +130,9 @@ jobs:
   callout:
     needs:
       - build
-      - copy-image-to-aliyun
-      - sync-fallback
+      - cp-image-to-aliyun
     if: |
-      needs.build.result == 'success' &&
-      (needs.copy-image-to-aliyun.result == 'success' || 
-      needs.sync-fallback.result == 'success')
+      needs.build.result == 'success' && needs.cp-image-to-aliyun.outputs.success == 'true'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
