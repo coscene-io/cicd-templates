@@ -181,8 +181,8 @@ jobs:
       - sync-fallback
     if: |
       needs.build.result == 'success' &&
-      (needs.copy-image-to-aliyun.result == 'success' ||
-      needs.sync-fallback.result-for-image == 'success')
+      (needs.copy-image-to-aliyun.result == 'success' || 
+      needs.sync-fallback.result == 'success')
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
