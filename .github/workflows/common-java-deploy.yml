@@ -72,57 +72,51 @@ jobs:
       tag: ${{ needs.build.outputs.tag }}
     secrets: inherit
 
-#  deploy:
-#    needs:
-#      - build
-#    runs-on: ubuntu-latest
-#    environment: azure-dev-east-us
-#    steps:
-#      - name: AKS login
-#        uses: azure/k8s-set-context@v3
-#        with:
-#          method: kubeconfig
-#          kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
-#      - name: Setup helmfile
-#        uses: mamezou-tech/setup-helmfile@v1.2.0
-#        with:
-#          helmfile-version: "v0.148.1"
-#          helm-version: "v3.10.2"
-#          additional-helm-plugins: https://github.com/aslafy-z/helm-git --version 0.14.0
-#      - name: Helm Add coScene Repo
-#        env:
-#          REPOSITORY_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
-#        run: |
-#          helm repo add coscene git+https://$REPOSITORY_TOKEN@github.com/coscene-io/chart@\?ref=main
-#      - name: Helm Upgrade
-#        run: |
-#          helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
-#      - name: Notification to Feishu
-#        uses: foxundermoon/feishu-action@v2
-#        with:
-#          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
-#          msg_type: text
-#          content: |
-#            text: |
-#              A new version of ${{ github.repository }} has been deployed.
-#              GitHubEvent: ${{ github.event_name }}
-#              committer: ${{ github.actor }}
-#              baseRef: ${{ github.ref }}
+  deploy:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment: azure-dev-east-us
+    steps:
+      - name: AKS login
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
+      - name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v1.2.0
+        with:
+          helmfile-version: "v0.148.1"
+          helm-version: "v3.10.2"
+          additional-helm-plugins: https://github.com/aslafy-z/helm-git --version 0.14.0
+      - name: Helm Add coScene Repo
+        env:
+          REPOSITORY_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+        run: |
+          helm repo add coscene git+https://$REPOSITORY_TOKEN@github.com/coscene-io/chart@\?ref=main
+      - name: Helm Upgrade
+        run: |
+          helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
+      - name: Notification to Feishu
+        uses: foxundermoon/feishu-action@v2
+        with:
+          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
+          msg_type: text
+          content: |
+            text: |
+              A new version of ${{ github.repository }} has been deployed.
+              GitHubEvent: ${{ github.event_name }}
+              committer: ${{ github.actor }}
+              baseRef: ${{ github.ref }}
 
   callout:
     needs:
       - build
       - cp-image-to-aliyun
-#    if: |
-#      needs.cp-image-to-aliyun.outputs.success == 'true'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
-#      - name: debug
-#        run: |
-#          echo ${{ needs.cp-image-to-aliyun.outputs.success }}
-#          echo ${{ needs.cp-image-to-aliyun.outputs.timeout }}
       - name: Add summary
         run: |
           echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY
@@ -133,18 +127,18 @@ jobs:
           echo "Azure image: $AZURE/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
-#      - name: Notification to Feishu
-#        uses: foxundermoon/feishu-action@v2
-#        with:
-#          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
-#          msg_type: text
-#          content: |
-#            text: |
-#              A new version of ${{ github.repository }} image has been published.
-#              GitHubEvent: ${{ github.event_name }}
-#              committer: ${{ github.actor }}
-#              baseRef: ${{ github.ref }}
-#              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
-#              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-#              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
-#              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+      - name: Notification to Feishu
+        uses: foxundermoon/feishu-action@v2
+        with:
+          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
+          msg_type: text
+          content: |
+            text: |
+              A new version of ${{ github.repository }} image has been published.
+              GitHubEvent: ${{ github.event_name }}
+              committer: ${{ github.actor }}
+              baseRef: ${{ github.ref }}
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest

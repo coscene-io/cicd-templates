@@ -246,17 +246,3 @@ jobs:
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
-
-  judge-cancelled:
-    needs:
-      - copy-image-to-aliyun
-      - sync-fallback
-#    if: needs.copy-image-to-aliyun.result == 'cancelled' && needs.sync-fallback.result == 'cancelled'
-    runs-on: ubuntu-latest
-    steps:
-      - name: cancel workflow
-        run: |
-          echo "${{needs.copy-image-to-aliyun.result}}"
-          echo "${{needs.sync-fallback.result}}"
-          echo "Timeout!!! Check the network." >> $GITHUB_STEP_SUMMARY
-          exit 1
