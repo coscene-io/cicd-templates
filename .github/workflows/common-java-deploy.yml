@@ -176,7 +176,7 @@ jobs:
 
   callout:
     needs:
-      - build,
+      - build
       - copy-image-to-aliyun
       - sync-fallback
     if: |
