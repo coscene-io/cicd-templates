@@ -89,6 +89,7 @@ jobs:
     needs:
       - copy-image-to-aliyun
       - sync-fallback
+    runs-on: ubuntu-latest
     steps:
       - name: Success
         id: is-successful
