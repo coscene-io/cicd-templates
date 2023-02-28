@@ -92,7 +92,7 @@ jobs:
   copy-first-image-to-aliyun:
     needs: [ build ]
     runs-on: [ self-hosted ]
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -123,7 +123,7 @@ jobs:
   sync-fallback-for-first-image:
     needs: [ build ]
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -147,7 +147,7 @@ jobs:
     needs: [ build ]
     if: inputs.second-image != ''
     runs-on: [ self-hosted ]
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -175,9 +175,9 @@ jobs:
 
   sync-fallback-for-second-image:
     needs: [ build ]
-    if: always() && inputs.second-image != '' && needs.copy-second-image-to-aliyun.result != 'success'
+    if: inputs.second-image != '' && needs.copy-second-image-to-aliyun.result != 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -201,7 +201,7 @@ jobs:
     if: inputs.third-image != ''
     needs: [ build ]
     runs-on: [ self-hosted ]
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -229,9 +229,9 @@ jobs:
 
   sync-fallback-for-third-image:
     needs: [ build ]
-    if: always() && inputs.third-image != '' && needs.copy-third-image-to-aliyun.result != 'success'
+    if: inputs.third-image != '' && needs.copy-third-image-to-aliyun.result != 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -298,7 +298,7 @@ jobs:
       sync-fallback-for-third-image
     ]
     if: |
-      always() && needs.build.result == 'success' &&
+      needs.build.result == 'success' &&
       (needs.copy-first-image-to-aliyun.result == 'success' ||
       needs.sync-fallback-for-first-image.result-for-first-image == 'success')
     runs-on: ubuntu-latest
