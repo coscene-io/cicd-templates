@@ -25,6 +25,7 @@ jobs:
   copy-image-to-aliyun:
     runs-on: self-hosted
     timeout-minutes: 1
+    continue-on-error: true
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
