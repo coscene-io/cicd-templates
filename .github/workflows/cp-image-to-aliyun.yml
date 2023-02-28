@@ -54,7 +54,7 @@ jobs:
 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
-        env:
+#        env:
 #          http_proxy: http://gfw:7890
 #          https_proxy: http://gfw:7890
         with:
