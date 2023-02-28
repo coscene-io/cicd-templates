@@ -74,6 +74,29 @@ jobs:
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        env:
+          AZURE: coseus.azurecr.io
+          ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
+        #          http_proxy: http://gfw:7890
+        #          https_proxy: http://gfw:7890
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        #        env:
+        #          http_proxy: http://gfw:7890
+        #          https_proxy: http://gfw:7890
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
   sync-fallback:
     runs-on: ubuntu-latest
     timeout-minutes: 1
@@ -100,7 +123,7 @@ jobs:
       - sync-fallback
     runs-on: ubuntu-latest
     outputs:
-      success: ${{ steps.is-successful.outputs.is-success }}
+      success: ${{ steps.is-success.outputs.is-success }}
       timeout: ${{ steps.is-timout.outputs.is-timeout }}
     steps:
       - name: Success
