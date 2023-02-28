@@ -92,7 +92,7 @@ jobs:
   copy-first-image-to-aliyun:
     needs: [ build ]
     runs-on: [ self-hosted ]
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -121,10 +121,9 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback-for-first-image:
-    needs: [ build, copy-first-image-to-aliyun ]
-    if: always() && needs.copy-first-image-to-aliyun.result != 'success'
+    needs: [ build ]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -148,7 +147,7 @@ jobs:
     needs: [ build ]
     if: inputs.second-image != ''
     runs-on: [ self-hosted ]
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -175,10 +174,10 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback-for-second-image:
-    needs: [ build, copy-second-image-to-aliyun ]
+    needs: [ build ]
     if: always() && inputs.second-image != '' && needs.copy-second-image-to-aliyun.result != 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -202,7 +201,7 @@ jobs:
     if: inputs.third-image != ''
     needs: [ build ]
     runs-on: [ self-hosted ]
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -229,10 +228,10 @@ jobs:
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
   sync-fallback-for-third-image:
-    needs: [ build, copy-third-image-to-aliyun ]
+    needs: [ build ]
     if: always() && inputs.third-image != '' && needs.copy-third-image-to-aliyun.result != 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     env:
       TAG: ${{ needs.build.outputs.tag }}
     steps:
@@ -300,7 +299,8 @@ jobs:
     ]
     if: |
       always() && needs.build.result == 'success' &&
-      (needs.copy-first-image-to-aliyun.result == 'success' || needs.sync-fallback.result-for-first-image == 'success')
+      (needs.copy-first-image-to-aliyun.result == 'success' ||
+      needs.sync-fallback-for-first-image.result-for-first-image == 'success')
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
@@ -316,7 +316,7 @@ jobs:
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: the second image summary (if exists)
-        if: | 
+        if: |
           success() && 
           (needs.copy-second-image-to-aliyun.result == 'success' || 
           needs.sync-fallback-for-second-image.result == 'success')
