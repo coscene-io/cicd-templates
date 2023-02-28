@@ -84,7 +84,7 @@ jobs:
   cp-image-to-aliyun:
     needs:
       - build
-    uses: ./.github/workflows/cp-image-to-aliyun.yml@chore/del-redundant-inputs
+    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-aliyun.yml@chore/del-redundant-inputs
     with:
       project: platform
       tag: ${{ needs.build.outputs.tag }}
