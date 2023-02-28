@@ -17,17 +17,17 @@ on:
         required: true
         type: string
 
-    secrets:
-      ACR_ADMIN_USERNAME:
-        required: true
-      ACR_ADMIN_PASSWORD:
-        required: true
-      ACR_USERNAME:
-        required: true
-      ACR_PASSWORD:
-        required: true
-      AZURE_KUBE_CONFIG:
-        required: true
+#    secrets:
+#      ACR_ADMIN_USERNAME:
+#        required: true
+#      ACR_ADMIN_PASSWORD:
+#        required: true
+#      ACR_USERNAME:
+#        required: true
+#      ACR_PASSWORD:
+#        required: true
+#      AZURE_KUBE_CONFIG:
+#        required: true
 
 env:
   AZURE: coseus.azurecr.io
@@ -36,7 +36,7 @@ env:
 jobs:
   copy-image-to-aliyun:
     runs-on: self-hosted
-    timeout-minutes: 1
+    timeout-minutes: 0
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
@@ -64,7 +64,7 @@ jobs:
 
   sync-fallback:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     steps:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0

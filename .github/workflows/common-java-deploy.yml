@@ -12,23 +12,23 @@ on:
         required: true
         type: string
 
-    secrets:
-      GH_PACKAGES_ORG_USERNAME:
-        required: true
-      GH_PACKAGES_ORG_TOKEN:
-        required: true
-      ACR_ADMIN_USERNAME:
-        required: true
-      ACR_ADMIN_PASSWORD:
-        required: true
-      ACR_USERNAME:
-        required: true
-      ACR_PASSWORD:
-        required: true
-      AZURE_KUBE_CONFIG:
-        required: true
-      FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND:
-        required: true
+#    secrets:
+#      GH_PACKAGES_ORG_USERNAME:
+#        required: true
+#      GH_PACKAGES_ORG_TOKEN:
+#        required: true
+#      ACR_ADMIN_USERNAME:
+#        required: true
+#      ACR_ADMIN_PASSWORD:
+#        required: true
+#      ACR_USERNAME:
+#        required: true
+#      ACR_PASSWORD:
+#        required: true
+#      AZURE_KUBE_CONFIG:
+#        required: true
+#      FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND:
+#        required: true
 
     outputs:
       tag:
