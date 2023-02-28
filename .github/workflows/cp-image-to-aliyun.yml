@@ -33,6 +33,67 @@ jobs:
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
 
+      - name: Skopeo Copy latest
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
@@ -92,6 +153,69 @@ jobs:
           dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
           src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
           dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.TAG }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.ACR_USERNAME }}:${{ secrets.ACR_PASSWORD }}
+
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
