@@ -112,7 +112,6 @@ jobs:
   callout:
     needs:
       - build
-      - cp-image-to-aliyun
     runs-on: ubuntu-latest
     env:
       TAG: ${{ needs.build.outputs.tag }}
