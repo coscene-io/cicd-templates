@@ -18,7 +18,7 @@ env:
 
 jobs:
   copy-image-to-aliyun:
-    runs-on: [self-hosted,aliyun,xs]
+    runs-on: [self-hosted,xs]
     timeout-minutes: 2
     continue-on-error: true
     env:
