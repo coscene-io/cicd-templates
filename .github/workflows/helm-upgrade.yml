@@ -1,0 +1,46 @@
+name: Helm Upgrade
+
+on:
+  workflow_call:
+    inputs:
+      sub-chart:
+        description: 'the name of sub-chart to be upgraded'
+        required: true
+        type: string
+
+jobs:
+  helm-upgrade:
+    runs-on: ubuntu-latest
+    environment: azure-dev-east-us
+    timeout-minutes: 1
+    steps:
+      - name: AKS login
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
+      - name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v1.2.0
+        with:
+          helmfile-version: "v0.148.1"
+          helm-version: "v3.10.2"
+          additional-helm-plugins: https://github.com/aslafy-z/helm-git --version 0.14.0
+      - name: Helm Add coScene Repo
+        env:
+          REPOSITORY_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+        run: |
+          helm repo add coscene git+https://$REPOSITORY_TOKEN@github.com/coscene-io/chart@\?ref=main
+      - name: Helm Upgrade
+        run: |
+          helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
+      - name: Notification to Feishu
+        uses: foxundermoon/feishu-action@v2
+        with:
+          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
+          msg_type: text
+          content: |
+            text: |
+              A new version of ${{ github.repository }} has been deployed.
+              GitHubEvent: ${{ github.event_name }}
+              committer: ${{ github.actor }}
+              baseRef: ${{ github.ref }}

@@ -1,0 +1,46 @@
+name: Image Callout
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'the image tag'
+        required: true
+        type: string
+env:
+  AZURE: coseus.azurecr.io
+  ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
+
+jobs:
+  callout:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag }}
+    timeout-minutes: 1
+    steps:
+      - name: Add summary
+        run: |
+          echo '## Image Summary :rocket:' >> $GITHUB_STEP_SUMMARY
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "GITHUB_ACTOR: $GITHUB_ACTOR" >> $GITHUB_STEP_SUMMARY
+          echo "GITHUB_REF: $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "Azure image: $AZURE/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
+      - name: Notification to Feishu
+        uses: foxundermoon/feishu-action@v2
+        with:
+          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
+          msg_type: text
+          content: |
+            text: |
+              A new version of ${{ github.repository }} image has been published.
+              GitHubEvent: ${{ github.event_name }}
+              committer: ${{ github.actor }}
+              baseRef: ${{ github.ref }}
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+
