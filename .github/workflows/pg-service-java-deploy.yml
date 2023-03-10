@@ -11,6 +11,10 @@ on:
         description: 'the name of sub chart'
         required: true
         type: string
+      test-database:
+        description: 'the name of test database'
+        required: true
+        type: string
 
     outputs:
       tag:
@@ -22,6 +26,15 @@ jobs:
     environment: azure-dev-east-us
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: ${{ inputs.test-database }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: not_a_secret
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
