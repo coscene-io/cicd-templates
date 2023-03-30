@@ -47,6 +47,8 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
           skaffold: '2.0.3'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Build and push images
         id: build-and-push
         run: |
