@@ -1,10 +1,10 @@
-name: Helm Upgrade
+name: Sub-char Upgrade
 
 on:
   workflow_call:
     inputs:
-      sub-chart:
-        description: 'the name of sub-chart to be upgraded'
+      deployment-name:
+        description: 'the name of deployment to be upgraded'
         required: true
         type: string
 
@@ -27,7 +27,7 @@ jobs:
           kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
       - name: Restart pods about target sub-chart
         run: |
-          kubectl rollout restart deployment/${{ inputs.sub-chart }} -n coscene
+          kubectl rollout restart deployment/${{ inputs.deployment-name }} -n coscene
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         with:
