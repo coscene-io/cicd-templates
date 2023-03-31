@@ -1,4 +1,4 @@
-name: Sub-char Upgrade
+name: Sub-chart Upgrade
 
 on:
   workflow_call:
