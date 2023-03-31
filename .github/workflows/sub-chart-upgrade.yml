@@ -1,0 +1,41 @@
+name: Helm Upgrade
+
+on:
+  workflow_call:
+    inputs:
+      sub-chart:
+        description: 'the name of sub-chart to be upgraded'
+        required: true
+        type: string
+
+jobs:
+  sub-chart-upgrade:
+    runs-on: ubuntu-latest
+    environment: azure-dev-east-us
+    timeout-minutes: 1
+    steps:
+      - name: Set up CD tools
+        uses: coscene-io/setup-cd-tools@v2.0.1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        with:
+          kubectl: '1.22.2'
+      - name: AKS login
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
+      - name: Restart pods about target sub-chart
+        run: |
+          kubectl rollout restart deployment/${{ inputs.sub-chart }} -n coscene
+      - name: Notification to Feishu
+        uses: foxundermoon/feishu-action@v2
+        with:
+          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
+          msg_type: text
+          content: |
+            text: |
+              A new version of ${{ github.repository }} has been deployed.
+              GitHubEvent: ${{ github.event_name }}
+              committer: ${{ github.actor }}
+              baseRef: ${{ github.ref }}
