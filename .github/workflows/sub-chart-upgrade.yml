@@ -35,7 +35,8 @@ jobs:
           msg_type: text
           content: |
             text: |
-              A new version of ${{ github.repository }} has been deployed.
+              Sub-chart upgrade!
+              the deployment ${{ inputs.deployment-name }} restarted.
               GitHubEvent: ${{ github.event_name }}
               committer: ${{ github.actor }}
               baseRef: ${{ github.ref }}
