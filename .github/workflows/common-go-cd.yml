@@ -7,10 +7,6 @@ on:
         description: 'the name of project to be built and the corresponding image'
         required: true
         type: string
-      sub-chart:
-        description: 'the name of sub chart'
-        required: true
-        type: string
 
     outputs:
       tag:
@@ -23,7 +19,20 @@ jobs:
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up CD tools
+        uses: coscene-io/setup-cd-tools@v2.0.1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        with:
+          skaffold: '2.0.3'
+      - name: ACR login
+        uses: docker/login-action@v2
+        with:
+          registry: coseus.azurecr.io
+          username: ${{ secrets.ACR_ADMIN_USERNAME }}
+          password: ${{ secrets.ACR_ADMIN_PASSWORD }}
       - name: Set up buf netrc
         uses: extractions/netrc@v1
         with:
@@ -36,17 +45,6 @@ jobs:
           machine: github.com
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
-      - uses: coscene-io/setup-cd-tools@v2.0.1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
-        with:
-          skaffold: '2.0.3'
-      - name: ACR login
-        uses: docker/login-action@v2
-        with:
-          registry: coseus.azurecr.io
-          username: ${{ secrets.ACR_ADMIN_USERNAME }}
-          password: ${{ secrets.ACR_ADMIN_PASSWORD }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Docker build & push
