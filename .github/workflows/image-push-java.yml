@@ -1,14 +1,10 @@
-name: Common Go deploy
+name: Push image build by Java
 
 on:
   workflow_call:
     inputs:
       project:
         description: 'the name of project to be built and the corresponding image'
-        required: true
-        type: string
-      sub-chart:
-        description: 'the name of sub chart'
         required: true
         type: string
 
@@ -23,35 +19,33 @@ jobs:
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up CD tools
-        uses: coscene-io/setup-cd-tools@v2.0.1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          skaffold: '2.0.3'
+          java-version: '17'
+          distribution: 'corretto'
+      - name: Gradle build
+        uses: gradle/gradle-build-action@v2
+        env:
+          REPOSITORY_USERNAME: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
+          REPOSITORY_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+        with:
+          arguments: build -x test -x check
       - name: ACR login
         uses: docker/login-action@v2
         with:
           registry: coseus.azurecr.io
           username: ${{ secrets.ACR_ADMIN_USERNAME }}
           password: ${{ secrets.ACR_ADMIN_PASSWORD }}
-      - name: Set up buf netrc
-        uses: extractions/netrc@v1
+      - uses: coscene-io/setup-cd-tools@v2.0.1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
-          machine: buf.build
-          username: ${{ secrets.BUF_USERNAME }}
-          password: ${{ secrets.BUF_TOKEN }}
-      - name: Set up github netrc
-        uses: extractions/netrc@v1
-        with:
-          machine: github.com
-          username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
-          password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+          skaffold: '2.0.3'
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      - name: Docker build & push
+      - name: Build and push images
         id: build-and-push
         run: |
           skaffold build --build-concurrency=0 -t latest
@@ -70,14 +64,6 @@ jobs:
     with:
       project: ${{ inputs.project }}
       tag: ${{ needs.build.outputs.tag }}
-    secrets: inherit
-
-  sub-chart-upgrade:
-    needs:
-      - build
-    uses: coscene-io/cicd-templates/.github/workflows/sub-chart-upgrade.yml@main
-    with:
-      sub-chart: ${{ inputs.sub-chart }}
     secrets: inherit
 
   callout:
