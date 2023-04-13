@@ -7,6 +7,10 @@ on:
         description: 'the name of project to be built and the corresponding image'
         required: true
         type: string
+      lfs: 
+        description: 'actions/checkout@v3 lfs'
+        required: true
+        type: boolean
 
     outputs:
       tag:
@@ -26,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          lfs: ${{ inputs.lfs }}
       - name: Setup Node env
         uses: actions/setup-node@v3
         with:
@@ -63,8 +69,8 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         run: |
-          skaffold build --build-concurrency=0 -t latest
           result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
+          skaffold build --build-concurrency=0 -t latest
           echo $result
           withoutRegistry=${result#*:}
           echo $withoutRegistry
