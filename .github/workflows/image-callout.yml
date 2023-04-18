@@ -3,6 +3,10 @@ name: Image Callout
 on:
   workflow_call:
     inputs:
+      project:
+        description: 'the name of project to be built and the corresponding image'
+        required: true
+        type: string
       tag:
         description: 'the image tag'
         required: true
