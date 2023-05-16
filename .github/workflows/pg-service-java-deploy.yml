@@ -28,7 +28,7 @@ jobs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     services:
       postgres:
-        image: ghcr.io/coscene-io/postgresql-zhparser:14.2.4
+        image: postgres:latest
         env:
           POSTGRES_DB: ${{ inputs.test-database }}
           POSTGRES_USER: postgres
