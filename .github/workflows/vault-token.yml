@@ -15,9 +15,6 @@ on:
       vault_addr:
         type: string
         default: https://vault-cluster-public-vault-ee647af1.6a5bfcd4.z1.hashicorp.cloud:8200
-      vault_namespace:
-        type: string
-        default: admin
       profile:
         type: string
         required: true
@@ -30,7 +27,6 @@ env:
   http_proxy: ${{ inputs.enable_proxy && inputs.http_proxy || '' }}
   https_proxy: ${{ inputs.enable_proxy && inputs.https_proxy || '' }}
   VAULT_ADDR: ${{ inputs.vault_addr }}
-  VAULT_NAMESPACE: ${{ inputs.vault_namespace }}
   VAULT_FORMAT: json
 
 jobs:
