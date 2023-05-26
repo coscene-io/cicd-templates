@@ -27,13 +27,14 @@ env:
   http_proxy: ${{ inputs.enable_proxy && inputs.http_proxy || '' }}
   https_proxy: ${{ inputs.enable_proxy && inputs.https_proxy || '' }}
   VAULT_ADDR: ${{ inputs.vault_addr }}
+  VAULT_NAMESPACE: admin
   VAULT_FORMAT: json
 
 jobs:
   generate:
     environment: ${{ inputs.profile }}
+    runs-on: [ self-hosted,xs ]
     timeout-minutes: 10
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
