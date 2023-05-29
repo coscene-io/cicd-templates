@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     runs-on:
-      labels: ubuntu-20.04-16core
+      labels: ubuntu-latest-16core
     environment: azure-dev-east-us
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
