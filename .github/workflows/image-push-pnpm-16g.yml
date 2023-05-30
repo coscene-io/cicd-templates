@@ -1,4 +1,4 @@
-name: Push image build by pnpm
+name: Push image build by pnpm 16g
 
 on:
   workflow_call:
@@ -65,8 +65,8 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         run: |
-          skaffold build --build-concurrency=0 -t latest
           result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
+          skaffold build --build-concurrency=0 -t latest
           echo $result
           withoutRegistry=${result#*:}
           echo $withoutRegistry
