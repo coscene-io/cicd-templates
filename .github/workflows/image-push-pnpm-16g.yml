@@ -36,8 +36,6 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
-      - name: Install Dependencies
-        run: pnpm install
 
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.0.1
@@ -68,6 +66,7 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         run: |
+          skaffold build --build-concurrency=0
           result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
           skaffold build --build-concurrency=0 -t latest
           echo $result
