@@ -1,4 +1,4 @@
-name: Push image build by pnpm 16g
+name: Push image build by pnpm with runner label
 
 on:
   workflow_call:
