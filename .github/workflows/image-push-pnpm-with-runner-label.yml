@@ -1,0 +1,97 @@
+name: Push image build by pnpm with runner label
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'the name of project to be built and the corresponding image'
+        required: true
+        type: string
+      runner_label:
+        description: 'the name of runner label'
+        required: true
+        type: string
+
+    outputs:
+      tag:
+        value: ${{ jobs.build.outputs.tag }}
+
+jobs:
+  build:
+    runs-on:
+      labels: ${{ inputs.runner_label }}
+    environment: azure-dev-east-us
+    env:
+      BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+      BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
+      GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    outputs:
+      tag: ${{ steps.build-and-push.outputs.TAG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Setup Node env
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Set up CD tools
+        uses: coscene-io/setup-cd-tools@v2.0.1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        with:
+          skaffold: '2.3.1'
+      - name: ACR login
+        uses: docker/login-action@v2
+        with:
+          registry: coseus.azurecr.io
+          username: ${{ secrets.ACR_ADMIN_USERNAME }}
+          password: ${{ secrets.ACR_ADMIN_PASSWORD }}
+      - name: Set up buf netrc
+        uses: extractions/netrc@v1
+        with:
+          machine: buf.build
+          username: ${{ secrets.BUF_USERNAME }}
+          password: ${{ secrets.BUF_TOKEN }}
+      - name: Set up github netrc
+        uses: extractions/netrc@v1
+        with:
+          machine: github.com
+          username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
+          password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Docker build & push
+        id: build-and-push
+        run: |
+          result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
+          skaffold build --build-concurrency=0 -t latest
+          echo $result
+          withoutRegistry=${result#*:}
+          echo $withoutRegistry
+          withoutDigest=${withoutRegistry%@*}
+          echo $withoutDigest
+          echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
+
+  cp-image-to-aliyun:
+    needs:
+      - build
+    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-aliyun.yml@main
+    with:
+      project: ${{ inputs.project }}
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit
+
+  callout:
+    needs:
+      - build
+    uses: coscene-io/cicd-templates/.github/workflows/image-callout.yml@main
+    with:
+      project: ${{ inputs.project }}
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit
