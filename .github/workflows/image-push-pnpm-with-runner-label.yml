@@ -7,7 +7,7 @@ on:
         description: 'the name of project to be built and the corresponding image'
         required: true
         type: string
-      runnerLabel:
+      runner_label:
         description: 'the name of runner label'
         required: true
         type: string
@@ -19,7 +19,7 @@ on:
 jobs:
   build:
     runs-on:
-      labels: ${{ inputs.runnerLabel }}
+      labels: ${{ inputs.runner_label }}
     environment: azure-dev-east-us
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
