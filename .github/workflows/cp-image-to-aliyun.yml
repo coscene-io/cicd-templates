@@ -19,7 +19,7 @@ env:
 jobs:
   cp-image-use-gh:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     continue-on-error: true
     steps:
       - name: Skopeo Copy
