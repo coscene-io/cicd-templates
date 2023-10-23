@@ -21,7 +21,7 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
       - name: Setup helmfile
-        uses: mamezou-tech/setup-helmfile@v1.2.0
+        uses: mamezou-tech/setup-helmfile@v1.3.0
         with:
           helmfile-version: "v0.148.1"
           helm-version: "v3.10.2"
