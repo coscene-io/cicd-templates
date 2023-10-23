@@ -7,6 +7,10 @@ on:
         description: 'the name of project to be built and the corresponding image'
         required: true
         type: string
+      workspace:
+        description: go module workspace
+        required: false
+        type: string
 
     outputs:
       tag:
@@ -54,6 +58,7 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         run: |
+          cd ${{ inputs.workspace }}
           skaffold build --build-concurrency=0 -t latest
           result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
           echo $result
