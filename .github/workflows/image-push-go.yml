@@ -11,6 +11,7 @@ on:
         description: go module workspace
         required: false
         type: string
+        default: '.'
 
     outputs:
       tag:
