@@ -1,0 +1,39 @@
+name: Copy image to volcengine
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'the name of project to be built and the corresponding image'
+        required: true
+        type: string
+      tag:
+        description: 'the image tag'
+        required: true
+        type: string
+
+env:
+  AZURE: coseus.azurecr.io
+  VOLCENGINE: coscene-cn-shanghai.cr.volces.com/coscene
+
+jobs:
+  cp-image-use-gh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    continue-on-error: true
+    steps:
+      - name: Skopeo Copy
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:${{ inputs.tag }}
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
+
+      - name: Skopeo Copy latest
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
