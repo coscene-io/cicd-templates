@@ -11,11 +11,6 @@ on:
         description: 'the name of test database'
         required: true
         type: string
-      volcengine:
-        description: whether push image to volcengine container registry
-        required: false
-        type: boolean
-        default: false
 
     outputs:
       tag:
@@ -85,7 +80,7 @@ jobs:
     secrets: inherit
 
   cp-image-to-volcengine:
-    if: inputs.volcengine
+    if: ${{ github.event_name }} == release || ${{ github.event_name }} == prerelease
     needs:
       - build
     uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
