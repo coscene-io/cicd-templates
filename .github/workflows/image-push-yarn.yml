@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       lfs: 
-        description: 'actions/checkout@v3 lfs'
+        description: 'actions/checkout@v4 lfs'
         required: true
         type: boolean
 
@@ -29,12 +29,12 @@ jobs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: ${{ inputs.lfs }}
       - run: corepack enable yarn
       - name: Setup Node env
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'yarn'
