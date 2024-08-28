@@ -84,7 +84,6 @@ jobs:
     secrets: inherit
 
   cp-image-to-volcengine:
-    if: ${{ github.event_name }} == release || ${{ github.event_name }} == prerelease
     needs:
       - build
     uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
