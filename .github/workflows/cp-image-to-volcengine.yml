@@ -22,10 +22,6 @@ jobs:
     timeout-minutes: 5
     continue-on-error: true
     steps:
-      - name: Event
-        run: |
-          echo "event name is:" ${{ github.event_name }}
-          echo "event type is:" ${{ github.event.action }} 
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
