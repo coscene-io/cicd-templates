@@ -11,7 +11,7 @@ on:
 jobs:
   sub-chart-upgrade:
     runs-on: ubuntu-latest
-    environment: azure-dev-east-us
+    environment: volcengine-dev-cn-shanghai
     timeout-minutes: 1
     steps:
       - name: Set up CD tools
@@ -20,11 +20,11 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
           kubectl: '1.22.2'
-      - name: AKS login
+      - name: VKE login
         uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig
-          kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
+          kubeconfig: ${{ secrets.VOLCENGINE_DEV_KUBE_CONFIG }}
       - name: Restart pods about target sub-chart
         run: |
           kubectl rollout restart deployment/${{ inputs.deployment-name }} -n coscene

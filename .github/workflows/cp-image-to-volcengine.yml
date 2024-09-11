@@ -13,7 +13,7 @@ on:
         type: string
 
 env:
-  AZURE: coseus.azurecr.io
+  ALICLOUD: registry.cn-hangzhou.aliyuncs.com/coscene
   VOLCENGINE: coscene-cn-shanghai.cr.volces.com/coscene
 
 jobs:
@@ -25,15 +25,7 @@ jobs:
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:${{ inputs.tag }}
+          src-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ inputs.tag }}
           dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:${{ inputs.tag }}
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
-          dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
-
-      - name: Skopeo Copy latest
-        uses: coscene-io/skopeo-copy-action@v1.0.0
-        with:
-          src-image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-          dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:latest
-          src-creds: ${{ secrets.ACR_ADMIN_USERNAME }}:${{ secrets.ACR_ADMIN_PASSWORD }}
+          src-creds: ${{ secrets.ACR_USERNAME  }}:${{ secrets.ACR_PASSWORD  }}
           dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
