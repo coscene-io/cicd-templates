@@ -48,9 +48,9 @@ jobs:
       - name: ACR login
         uses: docker/login-action@v2
         with:
-          registry: coseus.azurecr.io
-          username: ${{ secrets.ACR_ADMIN_USERNAME }}
-          password: ${{ secrets.ACR_ADMIN_PASSWORD }}
+          registry: registry.cn-hangzhou.aliyuncs.com/coscene
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
       - uses: coscene-io/setup-cd-tools@v2.0.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
@@ -62,25 +62,19 @@ jobs:
         id: build-and-push
         run: |
           skaffold build --build-concurrency=0 -t latest
-          result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
-          echo $result
-          withoutRegistry=${result#*:}
-          echo $withoutRegistry
-          withoutDigest=${withoutRegistry%@*}
-          echo $withoutDigest
-          echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
-
-  cp-image-to-aliyun:
-    needs:
-      - build
-    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-aliyun.yml@main
-    with:
-      project: ${{ inputs.project }}
-      tag: ${{ needs.build.outputs.tag }}
-    secrets: inherit
+          if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
+            result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
+            echo $result
+            withoutRegistry=${result#*:}
+            echo $withoutRegistry
+            withoutDigest=${withoutRegistry%@*}
+            echo $withoutDigest
+            echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+          fi
 
   cp-image-to-volcengine:
-    if: github.event_name == 'release' || github.event_name == 'prerelease'
     needs:
       - build
     uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
