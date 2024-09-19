@@ -77,7 +77,7 @@ jobs:
   cp-image-to-volcengine:
     needs:
       - build
-    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
+    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@feat/self-host
     with:
       project: ${{ inputs.project }}
       tag: ${{ needs.build.outputs.tag }}
