@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node env
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.0.1
