@@ -37,6 +37,7 @@ jobs:
         with:
           version: v1.61
           working-directory: ${{ inputs.workspace }}
+          args: --timeout=10m
       - name: Go build
         run: go build -v ./${{ inputs.workspace }}/...
       - name: Go test
