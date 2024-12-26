@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       project:
-        description: 'the name of project to be built and the corresponding image'
+        description: "the name of project to be built and the corresponding image"
         required: true
         type: string
-      lfs: 
-        description: 'actions/checkout@v4 lfs'
+      lfs:
+        description: "actions/checkout@v4 lfs"
         required: true
         type: boolean
 
@@ -19,7 +19,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: azure-dev-east-us
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
@@ -36,25 +35,18 @@ jobs:
       - name: Setup Node env
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'yarn'
+          node-version: 22
+          cache: "yarn"
       - name: Install Dependencies
         run: yarn install
-
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.0.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
-          skaffold: '2.3.1'
+          skaffold: "2.3.1"
       - name: ACR login
-        uses: docker/login-action@v2
-        with:
-          registry: registry.cn-hangzhou.aliyuncs.com/coscene
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-      - name: Set up buf netrc
-        uses: extractions/netrc@v1
+        uses: docker/login-action@v3
         with:
           registry: registry.cn-hangzhou.aliyuncs.com/coscene
           username: ${{ secrets.ACR_USERNAME }}
@@ -66,7 +58,7 @@ jobs:
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Docker build & push
         id: build-and-push
         run: |
