@@ -1,0 +1,97 @@
+name: Build and push image - operation web
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: "the name of project to be built and the corresponding image"
+        required: true
+        type: string
+
+    outputs:
+      tag:
+        value: ${{ jobs.build.outputs.tag }}
+
+jobs:
+  build:
+    # runs-on: ubuntu-latest
+    runs-on:
+      # labels: [amyrlin, xlarge]
+      labels: 4c-16g
+    timeout-minutes: 10
+    env:
+      BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+      BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
+      GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      NODE_OPTIONS: --max_old_space_size=16384
+    outputs:
+      tag: ${{ steps.build-and-push.outputs.TAG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+      - name: Setup Node env
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - name: Install Dependencies
+        run: pnpm install
+      - name: Build
+        run: pnpm run operation:build
+      - name: Set up CD tools
+        uses: coscene-io/setup-cd-tools@v2.0.1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        with:
+          skaffold: "2.3.1"
+      - name: ACR login
+        uses: docker/login-action@v3
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com/coscene
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Set up github netrc
+        uses: extractions/netrc@v2
+        with:
+          machine: github.com
+          username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
+          password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+      - name: Docker build & push
+        id: build-and-push
+        run: |
+          skaffold build --build-concurrency=0 -p operation-web -t latest
+          if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
+            result=$(skaffold build --build-concurrency=0 -p operation-web -q | jq '.builds[0].tag')
+            echo $result
+            withoutRegistry=${result#*:}
+            echo $withoutRegistry
+            withoutDigest=${withoutRegistry%@*}
+            echo $withoutDigest
+            echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+          fi
+
+  cp-image-to-volcengine:
+    needs:
+      - build
+    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
+    with:
+      project: ${{ inputs.project }}
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit
+
+  callout:
+    needs:
+      - build
+    uses: coscene-io/cicd-templates/.github/workflows/image-callout.yml@main
+    with:
+      project: ${{ inputs.project }}
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit
