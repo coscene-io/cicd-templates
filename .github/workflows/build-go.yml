@@ -33,9 +33,9 @@ jobs:
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Go lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.61
+          version: v2.4.0
           working-directory: ${{ inputs.workspace }}
           args: --timeout 10m --verbose
       - name: Go build
