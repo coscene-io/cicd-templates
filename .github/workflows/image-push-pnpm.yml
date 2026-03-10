@@ -4,8 +4,12 @@ on:
   workflow_call:
     inputs:
       project:
-        description: 'the name of project to be built and the corresponding image'
+        description: "the name of project to be built and the corresponding image"
         required: true
+        type: string
+      profile:
+        description: "the name of skaffold profile"
+        required: false
         type: string
 
     outputs:
@@ -15,7 +19,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: azure-dev-east-us
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
@@ -29,7 +32,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
           run_install: false
       - name: Setup Node env
         uses: actions/setup-node@v4
@@ -41,19 +44,13 @@ jobs:
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
-          skaffold: '2.3.1'
+          skaffold: "2.3.1"
       - name: ACR login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: registry.cn-hangzhou.aliyuncs.com/coscene
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
-      - name: Set up buf netrc
-        uses: extractions/netrc@v1
-        with:
-          machine: buf.build
-          username: ${{ secrets.BUF_USERNAME }}
-          password: ${{ secrets.BUF_TOKEN }}
       - name: Set up github netrc
         uses: extractions/netrc@v1
         with:
@@ -61,13 +58,14 @@ jobs:
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Docker build & push
         id: build-and-push
         run: |
-          skaffold build --build-concurrency=0 -t latest
+          PROFILE_ARG=$([ -n "${{ inputs.profile }}" ] && echo "-p ${{ inputs.profile }}" || echo "")
+          skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
           if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
-            result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
+            result=$(skaffold build --build-concurrency=0 $PROFILE_ARG -q | jq '.builds[0].tag')
             echo $result
             withoutRegistry=${result#*:}
             echo $withoutRegistry
