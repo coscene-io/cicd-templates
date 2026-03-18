@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: '1.26.x'
+      run_tests:
+        description: Whether to run `go test` step
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -60,4 +65,5 @@ jobs:
       - name: Go build
         run: go build -v ./${{ inputs.workspace }}/...
       - name: Go test
+        if: ${{ inputs.run_tests }}
         run: go test -v ./${{ inputs.workspace }}/...
