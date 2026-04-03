@@ -1,4 +1,4 @@
-name: Push image build by pnpm 16g
+name: Push image build by pnpm
 
 on:
   workflow_call:
@@ -11,6 +11,15 @@ on:
         description: "the name of skaffold profile"
         required: false
         type: string
+      build:
+        description: "the pnpm script name to build the project"
+        required: false
+        type: string
+      runner:
+        description: "the runner to use, e.g. ubuntu-latest or 4c-16g"
+        required: false
+        type: string
+        default: ubuntu-latest
 
     outputs:
       tag:
@@ -18,12 +27,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
       GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      NODE_OPTIONS: --max_old_space_size=16384
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
@@ -38,7 +48,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
+          cache: "pnpm"
+      - name: Install Dependencies
+        if: ${{ inputs.build != '' }}
+        run: pnpm install
+      - name: Build
+        if: ${{ inputs.build != '' }}
+        run: pnpm run ${{ inputs.build }}
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.0.1
         env:
