@@ -15,6 +15,11 @@ on:
         description: "the pnpm script name to build the project"
         required: false
         type: string
+      runner:
+        description: "the runner to use, e.g. ubuntu-latest or 4c-16g"
+        required: false
+        type: string
+        default: ubuntu-latest
 
     outputs:
       tag:
@@ -22,12 +27,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
       GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      NODE_OPTIONS: --max_old_space_size=16384
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
