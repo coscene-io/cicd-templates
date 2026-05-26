@@ -15,6 +15,11 @@ on:
         description: "the pnpm script name to build the project"
         required: false
         type: string
+      pnpm_version:
+        description: "the pnpm version to install"
+        required: false
+        type: string
+        default: "11"
       runner:
         description: "the runner to use, e.g. ubuntu-latest or 4c-16g"
         required: false
@@ -42,7 +47,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: ${{ inputs.pnpm_version }}
           run_install: false
       - name: Setup Node env
         uses: actions/setup-node@v4
