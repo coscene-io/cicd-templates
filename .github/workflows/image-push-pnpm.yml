@@ -99,11 +99,11 @@ jobs:
             withoutDigest=${withoutRegistry%@*}
             echo $withoutDigest
             TAG=${withoutDigest}
-            echo "IMAGE_TAG=${TAG}"
+            echo "COSCENE_IMAGE_TAG=${TAG}"
           fi
-          IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
+          COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
           if [[ $TAG != 'latest' ]]; then
-            IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -q
+            COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -q
           fi
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
