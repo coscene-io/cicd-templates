@@ -18,7 +18,7 @@ env:
 
 jobs:
   cp-image-use-gh:
-    runs-on: ["aliyun", "X64"]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
     steps:
