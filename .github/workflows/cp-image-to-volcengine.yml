@@ -29,3 +29,11 @@ jobs:
           dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:${{ inputs.tag }}
           src-creds: ${{ secrets.ACR_USERNAME  }}:${{ secrets.ACR_PASSWORD  }}
           dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
+      - name: Skopeo Copy Latest
+        if: ${{ inputs.tag != 'latest' }}
+        uses: coscene-io/skopeo-copy-action@v1.0.0
+        with:
+          src-image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
+          dst-image: ${{ env.VOLCENGINE }}/${{ inputs.project }}:latest
+          src-creds: ${{ secrets.ACR_USERNAME  }}:${{ secrets.ACR_PASSWORD  }}
+          dst-creds: ${{ secrets.VOLCENGINE_CR_USERNAME }}:${{ secrets.VOLCENGINE_CR_PASSWORD }}
