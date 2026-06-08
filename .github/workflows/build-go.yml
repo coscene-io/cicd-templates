@@ -43,13 +43,13 @@ jobs:
           check-latest: true
           cache: false
       - name: Set up netrc
-        uses: extractions/netrc@v1
+        uses: extractions/netrc@v3
         with:
           machine: buf.build
           username: ${{ secrets.BUF_USERNAME }}
           password: ${{ secrets.BUF_TOKEN }}
       - name: Set up github netrc
-        uses: extractions/netrc@v1
+        uses: extractions/netrc@v3
         with:
           machine: github.com
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
