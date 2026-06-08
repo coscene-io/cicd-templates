@@ -38,7 +38,7 @@ jobs:
           registry: registry.cn-hangzhou.aliyuncs.com/coscene
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
-      - uses: coscene-io/setup-cd-tools@v2.1.0
+      - uses: coscene-io/setup-cd-tools@fix/skaffold-gcs-download
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:

@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 1
     steps:
       - name: Set up CD tools
-        uses: coscene-io/setup-cd-tools@v2.1.0
+        uses: coscene-io/setup-cd-tools@fix/skaffold-gcs-download
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
