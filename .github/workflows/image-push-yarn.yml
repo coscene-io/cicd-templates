@@ -40,7 +40,7 @@ jobs:
       - name: Install Dependencies
         run: yarn install
       - name: Set up CD tools
-        uses: coscene-io/setup-cd-tools@fix/skaffold-gcs-download
+        uses: coscene-io/setup-cd-tools@v26.1.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:

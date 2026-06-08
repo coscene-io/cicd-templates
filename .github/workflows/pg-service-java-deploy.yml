@@ -55,7 +55,7 @@ jobs:
           registry: coseus.azurecr.io
           username: ${{ secrets.ACR_ADMIN_USERNAME }}
           password: ${{ secrets.ACR_ADMIN_PASSWORD }}
-      - uses: coscene-io/setup-cd-tools@fix/skaffold-gcs-download
+      - uses: coscene-io/setup-cd-tools@v26.1.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
