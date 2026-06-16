@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: false
+      tag:
+        description: image tag to build and push
+        required: false
+        type: string
+        default: latest
 
     outputs:
       tag:
@@ -63,9 +68,11 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
+        env:
+          IMAGE_TAG: ${{ inputs.tag }}
         run: |
           cd ${{ inputs.workspace }}
-          skaffold build --build-concurrency=0 -t latest
+          skaffold build --build-concurrency=0 -t "$IMAGE_TAG"
           if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
             result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
             echo $result
@@ -75,7 +82,7 @@ jobs:
             echo $withoutDigest
             echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
           else
-            echo "TAG=latest" >> $GITHUB_OUTPUT
+            echo "TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           fi
 
   cp-image-to-volcengine:
