@@ -7,12 +7,22 @@ on:
         description: 'the name of deployment to be upgraded'
         required: true
         type: string
+      container-name:
+        description: 'the name of container whose image should be updated'
+        required: false
+        type: string
+        default: ''
+      image:
+        description: 'the full image reference to deploy'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   sub-chart-upgrade:
     runs-on: ubuntu-latest
     environment: volcengine-dev-cn-shanghai
-    timeout-minutes: 1
+    timeout-minutes: 5
     steps:
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.1.1
@@ -25,9 +35,17 @@ jobs:
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.VOLCENGINE_DEV_KUBE_CONFIG }}
+      - name: Update deployment image
+        if: ${{ inputs.container-name != '' && inputs.image != '' }}
+        run: |
+          kubectl set image deployment/${{ inputs.deployment-name }} ${{ inputs.container-name }}=${{ inputs.image }} -n coscene
       - name: Restart pods about target sub-chart
+        if: ${{ inputs.container-name == '' || inputs.image == '' }}
         run: |
           kubectl rollout restart deployment/${{ inputs.deployment-name }} -n coscene
+      - name: Wait for deployment rollout
+        run: |
+          kubectl rollout status deployment/${{ inputs.deployment-name }} -n coscene --timeout=120s
       - name: Notification to Feishu
         uses: foxundermoon/feishu-action@v2
         with:
