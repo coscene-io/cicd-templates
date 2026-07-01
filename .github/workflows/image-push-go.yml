@@ -30,7 +30,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: volcengine-dev-cn-shanghai
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
