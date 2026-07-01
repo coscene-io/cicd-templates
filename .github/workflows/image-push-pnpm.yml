@@ -15,6 +15,11 @@ on:
         description: "the pnpm script name to build the project"
         required: false
         type: string
+      pnpm_version:
+        description: "the pnpm version to install"
+        required: false
+        type: string
+        default: ""
       runner:
         description: "the runner to use, e.g. ubuntu-latest or 4c-16g"
         required: false
@@ -38,16 +43,22 @@ jobs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: actions/checkout@v6
+      - name: Setup pnpm from packageManager
+        if: ${{ inputs.pnpm_version == '' }}
+        uses: pnpm/action-setup@v6
         with:
-          version: 10
+          run_install: false
+      - name: Setup pnpm from workflow input
+        if: ${{ inputs.pnpm_version != '' }}
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ inputs.pnpm_version }}
           run_install: false
       - name: Setup Node env
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: "pnpm"
       - name: Install Dependencies
         if: ${{ inputs.build != '' }}
@@ -56,41 +67,45 @@ jobs:
         if: ${{ inputs.build != '' }}
         run: pnpm run ${{ inputs.build }}
       - name: Set up CD tools
-        uses: coscene-io/setup-cd-tools@v2.0.1
+        uses: coscene-io/setup-cd-tools@v2.1.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
           skaffold: "2.3.1"
       - name: ACR login
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: registry.cn-hangzhou.aliyuncs.com/coscene
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       - name: Set up github netrc
-        uses: extractions/netrc@v1
+        uses: extractions/netrc@v3
         with:
           machine: github.com
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
         run: |
           PROFILE_ARG=$([ -n "${{ inputs.profile }}" ] && echo "-p ${{ inputs.profile }}" || echo "")
-          skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
+          TAG=latest
           if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
-            result=$(skaffold build --build-concurrency=0 $PROFILE_ARG -q | jq '.builds[0].tag')
+            result=$(skaffold build --build-concurrency=0 $PROFILE_ARG --dry-run -q | jq -r '.builds[0].tag')
             echo $result
             withoutRegistry=${result#*:}
             echo $withoutRegistry
             withoutDigest=${withoutRegistry%@*}
             echo $withoutDigest
-            echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
-          else
-            echo "TAG=latest" >> $GITHUB_OUTPUT
+            TAG=${withoutDigest}
+            echo "COSCENE_IMAGE_TAG=${TAG}"
           fi
+          COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
+          if [[ $TAG != 'latest' ]]; then
+            COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -q
+          fi
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
   cp-image-to-volcengine:
     needs:

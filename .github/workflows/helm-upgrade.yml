@@ -11,7 +11,7 @@ on:
 
 jobs:
   helm-upgrade:
-    runs-on: ubuntu-latest
+    runs-on: [gcp]
     timeout-minutes: 1
     steps:
       - name: AKS login

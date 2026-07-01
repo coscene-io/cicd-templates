@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: false
+      tag:
+        description: image tag to build and push
+        required: false
+        type: string
+        default: latest
 
     outputs:
       tag:
@@ -35,36 +40,38 @@ jobs:
         with:
           go-version: ">=1.20.2"
       - name: Set up CD tools
-        uses: coscene-io/setup-cd-tools@v2.0.1
+        uses: coscene-io/setup-cd-tools@v2.1.1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
           skaffold: '2.3.1'
       - name: ACR login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           registry: registry.cn-hangzhou.aliyuncs.com/coscene
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       - name: Set up buf netrc
-        uses: extractions/netrc@v1
+        uses: extractions/netrc@v3
         with:
           machine: buf.build
           username: ${{ secrets.BUF_USERNAME }}
           password: ${{ secrets.BUF_TOKEN }}
       - name: Set up github netrc
-        uses: extractions/netrc@v1
+        uses: extractions/netrc@v3
         with:
           machine: github.com
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
+        env:
+          IMAGE_TAG: ${{ inputs.tag }}
         run: |
           cd ${{ inputs.workspace }}
-          skaffold build --build-concurrency=0 -t latest
+          skaffold build --build-concurrency=0 -t "$IMAGE_TAG"
           if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
             result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')
             echo $result
@@ -74,7 +81,7 @@ jobs:
             echo $withoutDigest
             echo "TAG=${withoutDigest}" >> $GITHUB_OUTPUT
           else
-            echo "TAG=latest" >> $GITHUB_OUTPUT
+            echo "TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           fi
 
   cp-image-to-volcengine:
