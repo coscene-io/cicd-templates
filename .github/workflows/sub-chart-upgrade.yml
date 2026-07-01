@@ -11,7 +11,6 @@ on:
 jobs:
   sub-chart-upgrade:
     runs-on: ubuntu-latest
-    environment: volcengine-dev-cn-shanghai
     timeout-minutes: 1
     steps:
       - name: Set up CD tools

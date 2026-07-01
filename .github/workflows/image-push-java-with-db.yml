@@ -19,7 +19,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: azure-dev-east-us
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     services:
