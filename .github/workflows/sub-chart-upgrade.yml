@@ -28,14 +28,12 @@ jobs:
         run: |
           kubectl rollout restart deployment/${{ inputs.deployment-name }} -n coscene
       - name: Notification to Feishu
-        uses: foxundermoon/feishu-action@v2
+        uses: coscene-io/cicd-templates/.github/actions/feishu-notify@824434d6b2fc762f55f112adec821a36ac161b46
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
-          msg_type: text
-          content: |
-            text: |
-              Sub-chart upgrade!
-              the deployment ${{ inputs.deployment-name }} restarted.
-              GitHubEvent: ${{ github.event_name }}
-              committer: ${{ github.actor }}
-              baseRef: ${{ github.ref }}
+          webhook-url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
+          text: |
+            Sub-chart upgrade!
+            the deployment ${{ inputs.deployment-name }} restarted.
+            GitHubEvent: ${{ github.event_name }}
+            committer: ${{ github.actor }}
+            baseRef: ${{ github.ref }}
