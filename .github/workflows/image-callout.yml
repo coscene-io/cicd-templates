@@ -33,18 +33,15 @@ jobs:
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:$TAG" >> $GITHUB_STEP_SUMMARY
           echo "AliCloud image: $ALICLOUD/${{ inputs.project }}:latest" >> $GITHUB_STEP_SUMMARY
       - name: Notification to Feishu
-        uses: foxundermoon/feishu-action@v2
+        uses: coscene-io/cicd-templates/.github/actions/feishu-notify@824434d6b2fc762f55f112adec821a36ac161b46
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
-          msg_type: text
-          content: |
-            text: |
-              A new version of ${{ github.repository }} image has been published.
-              GitHubEvent: ${{ github.event_name }}
-              committer: ${{ github.actor }}
-              baseRef: ${{ github.ref }}
-              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
-              Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
-              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
-              AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest
-
+          webhook-url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_IMAGE_BROADCAST }}
+          text: |
+            A new version of ${{ github.repository }} image has been published.
+            GitHubEvent: ${{ github.event_name }}
+            committer: ${{ github.actor }}
+            baseRef: ${{ github.ref }}
+            Azure image: ${{ env.AZURE }}/${{ inputs.project }}:${{ env.TAG }}
+            Azure image: ${{ env.AZURE }}/${{ inputs.project }}:latest
+            AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:${{ env.TAG }}
+            AliCloud image: ${{ env.ALICLOUD }}/${{ inputs.project }}:latest

@@ -34,13 +34,11 @@ jobs:
         run: |
           helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
       - name: Notification to Feishu
-        uses: foxundermoon/feishu-action@v2
+        uses: coscene-io/cicd-templates/.github/actions/feishu-notify@824434d6b2fc762f55f112adec821a36ac161b46
         with:
-          url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
-          msg_type: text
-          content: |
-            text: |
-              A new version of ${{ github.repository }} has been deployed.
-              GitHubEvent: ${{ github.event_name }}
-              committer: ${{ github.actor }}
-              baseRef: ${{ github.ref }}
+          webhook-url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
+          text: |
+            A new version of ${{ github.repository }} has been deployed.
+            GitHubEvent: ${{ github.event_name }}
+            committer: ${{ github.actor }}
+            baseRef: ${{ github.ref }}
