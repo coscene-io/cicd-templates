@@ -43,7 +43,7 @@ jobs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup pnpm from packageManager
         if: ${{ inputs.pnpm_version == '' }}
         uses: pnpm/action-setup@v6
@@ -56,7 +56,7 @@ jobs:
           version: ${{ inputs.pnpm_version }}
           run_install: false
       - name: Setup Node env
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: "pnpm"
