@@ -19,7 +19,7 @@ jobs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.1.1
         env:
