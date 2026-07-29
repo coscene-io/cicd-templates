@@ -25,10 +25,37 @@ on:
         required: false
         type: string
         default: ubuntu-latest
+      node_heap_mb:
+        description: "maximum Node.js old-space heap in MiB"
+        required: false
+        type: number
+        default: 16384
+      package_manager_cache:
+        description: "whether actions/setup-node restores and saves the pnpm store"
+        required: false
+        type: boolean
+        default: true
+      setup_buildx:
+        description: "whether to create a Docker Buildx builder before Skaffold"
+        required: false
+        type: boolean
+        default: true
+      single_release_build:
+        description: "build a release image once and retag it as latest"
+        required: false
+        type: boolean
+        default: false
+      measure_resources:
+        description: "record build timing and cgroup memory metrics in the job summary"
+        required: false
+        type: boolean
+        default: false
 
     outputs:
       tag:
         value: ${{ jobs.build.outputs.tag }}
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
 
 jobs:
   build:
@@ -37,28 +64,35 @@ jobs:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      NODE_OPTIONS: --max_old_space_size=16384
+      NODE_OPTIONS: --max_old_space_size=${{ inputs.node_heap_mb }}
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
+      digest: ${{ steps.build-and-push.outputs.DIGEST }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup pnpm from packageManager
-        if: ${{ inputs.pnpm_version == '' }}
+        if: ${{ inputs.build != '' && inputs.pnpm_version == '' }}
         uses: pnpm/action-setup@v6
         with:
           run_install: false
       - name: Setup pnpm from workflow input
-        if: ${{ inputs.pnpm_version != '' }}
+        if: ${{ inputs.build != '' && inputs.pnpm_version != '' }}
         uses: pnpm/action-setup@v6
         with:
           version: ${{ inputs.pnpm_version }}
           run_install: false
-      - name: Setup Node env
+      - name: Setup Node env with pnpm cache
+        if: ${{ inputs.build != '' && inputs.package_manager_cache }}
         uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: "pnpm"
+      - name: Setup Node env without package manager cache
+        if: ${{ inputs.build != '' && !inputs.package_manager_cache }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: Install Dependencies
         if: ${{ inputs.build != '' }}
         env:
@@ -66,7 +100,17 @@ jobs:
         run: pnpm install
       - name: Build
         if: ${{ inputs.build != '' }}
-        run: pnpm run ${{ inputs.build }}
+        env:
+          BUILD_SCRIPT: ${{ inputs.build }}
+          MEASURE_RESOURCES: ${{ inputs.measure_resources }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$MEASURE_RESOURCES" == 'true' && -x /usr/bin/time ]]; then
+            /usr/bin/time -v -o "$RUNNER_TEMP/pnpm-build.time" pnpm run "$BUILD_SCRIPT"
+          else
+            pnpm run "$BUILD_SCRIPT"
+          fi
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.1.1
         env:
@@ -86,34 +130,100 @@ jobs:
           username: ${{ secrets.GH_PACKAGES_ORG_USERNAME }}
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       - name: Set up Docker Buildx
+        if: ${{ inputs.setup_buildx }}
         uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
         env:
           GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
+          MEASURE_RESOURCES: ${{ inputs.measure_resources }}
+          PROFILE: ${{ inputs.profile }}
+          SINGLE_RELEASE_BUILD: ${{ inputs.single_release_build }}
         run: |
-          PROFILE_ARG=$([ -n "${{ inputs.profile }}" ] && echo "-p ${{ inputs.profile }}" || echo "")
+          set -euo pipefail
+
+          profile_args=()
+          if [[ -n "$PROFILE" ]]; then
+            profile_args=(-p "$PROFILE")
+          fi
+
+          run_skaffold_build() {
+            local output_file="$1"
+            shift
+            if [[ "$MEASURE_RESOURCES" == 'true' && -x /usr/bin/time ]]; then
+              /usr/bin/time -v -o "$RUNNER_TEMP/$output_file" skaffold build "$@"
+            else
+              skaffold build "$@"
+            fi
+          }
+
           TAG=latest
-          if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
-            result=$(skaffold build --build-concurrency=0 $PROFILE_ARG --dry-run -q | jq -r '.builds[0].tag')
-            echo $result
-            withoutRegistry=${result#*:}
-            echo $withoutRegistry
-            withoutDigest=${withoutRegistry%@*}
-            echo $withoutDigest
-            TAG=${withoutDigest}
-            echo "COSCENE_IMAGE_TAG=${TAG}"
+          if [[ "$GITHUB_EVENT_NAME" == 'release' ]]; then
+            dry_run_result="$(skaffold build --build-concurrency=0 "${profile_args[@]}" --dry-run -q)"
+            dry_run_image="$(jq -r '.builds[0].tag' <<< "$dry_run_result")"
+            release_image="${dry_run_image%@*}"
+            TAG="${release_image##*:}"
+            printf 'Release image tag: %s\n' "$TAG"
           fi
-          COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -t latest
-          if [[ $TAG != 'latest' ]]; then
-            COSCENE_IMAGE_TAG="$TAG" skaffold build --build-concurrency=0 $PROFILE_ARG -q
+
+          if [[ "$TAG" != 'latest' && "$SINGLE_RELEASE_BUILD" == 'true' ]]; then
+            build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-build.time \
+              --build-concurrency=0 "${profile_args[@]}" -t "$TAG" -q)"
+            built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
+            repository="${release_image%:*}"
+            docker buildx imagetools create --tag "$repository:latest" "$built_image"
+          else
+            build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-build.time \
+              --build-concurrency=0 "${profile_args[@]}" -t latest -q)"
+            built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
+            if [[ "$TAG" != 'latest' ]]; then
+              build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-release-build.time \
+                --build-concurrency=0 "${profile_args[@]}" -q)"
+              built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
+            fi
           fi
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+          printf '%s\n' "$build_result"
+          digest=''
+          if [[ "$built_image" == *@* ]]; then
+            digest="${built_image##*@}"
+          fi
+          printf 'TAG=%s\nDIGEST=%s\n' "$TAG" "$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Report resource usage
+        if: ${{ always() && inputs.measure_resources }}
+        run: |
+          {
+            echo '## Image build resources'
+            echo
+            echo "Runner: $RUNNER_NAME"
+            echo "Node options: $NODE_OPTIONS"
+            for report in "$RUNNER_TEMP"/*.time; do
+              if [[ -f "$report" ]]; then
+                echo
+                echo "### $(basename "$report")"
+                echo '```text'
+                cat "$report"
+                echo '```'
+              fi
+            done
+            if [[ -r /sys/fs/cgroup/memory.peak ]]; then
+              echo
+              echo "cgroup memory.peak: $(cat /sys/fs/cgroup/memory.peak) bytes"
+            fi
+            if [[ -r /sys/fs/cgroup/memory.events ]]; then
+              echo
+              echo 'cgroup memory.events:'
+              echo '```text'
+              cat /sys/fs/cgroup/memory.events
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   cp-image-to-volcengine:
     needs:
       - build
-    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@main
+    uses: coscene-io/cicd-templates/.github/workflows/cp-image-to-volcengine.yml@08c22ef839458cde29b29c894c6fa5ab1da45a2b
     with:
       project: ${{ inputs.project }}
       tag: ${{ needs.build.outputs.tag }}
@@ -122,7 +232,7 @@ jobs:
   callout:
     needs:
       - build
-    uses: coscene-io/cicd-templates/.github/workflows/image-callout.yml@main
+    uses: coscene-io/cicd-templates/.github/workflows/image-callout.yml@08c22ef839458cde29b29c894c6fa5ab1da45a2b
     with:
       project: ${{ inputs.project }}
       tag: ${{ needs.build.outputs.tag }}
