@@ -36,7 +36,6 @@ jobs:
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}
-      GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       NODE_OPTIONS: --max_old_space_size=16384
     outputs:
@@ -62,6 +61,8 @@ jobs:
           cache: "pnpm"
       - name: Install Dependencies
         if: ${{ inputs.build != '' }}
+        env:
+          PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@coscene-io":{"authToken":"${{ secrets.GH_PACKAGES_ORG_TOKEN }}"}}}'
         run: pnpm install
       - name: Build
         if: ${{ inputs.build != '' }}
@@ -88,6 +89,8 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
+        env:
+          GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
         run: |
           PROFILE_ARG=$([ -n "${{ inputs.profile }}" ] && echo "-p ${{ inputs.profile }}" || echo "")
           TAG=latest
