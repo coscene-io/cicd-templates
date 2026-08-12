@@ -50,6 +50,16 @@ on:
         required: false
         type: boolean
         default: false
+      stream_build_logs:
+        description: "stream Skaffold build logs while writing the build result to a file"
+        required: false
+        type: boolean
+        default: false
+      image_build_timeout_minutes:
+        description: "maximum duration of the Docker build and push step"
+        required: false
+        type: number
+        default: 360
 
     outputs:
       tag:
@@ -134,11 +144,13 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
+        timeout-minutes: ${{ inputs.image_build_timeout_minutes }}
         env:
           GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
           MEASURE_RESOURCES: ${{ inputs.measure_resources }}
           PROFILE: ${{ inputs.profile }}
           SINGLE_RELEASE_BUILD: ${{ inputs.single_release_build }}
+          STREAM_BUILD_LOGS: ${{ inputs.stream_build_logs }}
         run: |
           set -euo pipefail
 
@@ -157,6 +169,21 @@ jobs:
             fi
           }
 
+          build_with_result_file() {
+            local result_file="$1"
+            local timing_file="$2"
+            shift 2
+
+            rm -f "$result_file"
+            if [[ "$STREAM_BUILD_LOGS" == 'true' ]]; then
+              run_skaffold_build "$timing_file" "$@" --file-output "$result_file"
+            else
+              run_skaffold_build "$timing_file" "$@" -q > "$result_file"
+            fi
+            jq -e '.builds | length > 0 and (.builds[0].tag | type == "string" and length > 0)' \
+              "$result_file" > /dev/null
+          }
+
           TAG=latest
           if [[ "$GITHUB_EVENT_NAME" == 'release' ]]; then
             dry_run_result="$(skaffold build --build-concurrency=0 "${profile_args[@]}" --dry-run -q)"
@@ -167,18 +194,24 @@ jobs:
           fi
 
           if [[ "$TAG" != 'latest' && "$SINGLE_RELEASE_BUILD" == 'true' ]]; then
-            build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-build.time \
-              --build-concurrency=0 "${profile_args[@]}" -t "$TAG" -q)"
+            result_file="$RUNNER_TEMP/skaffold-build.json"
+            COSCENE_IMAGE_TAG="$TAG" build_with_result_file "$result_file" skaffold-build.time \
+              --build-concurrency=0 "${profile_args[@]}" -t "$TAG"
+            build_result="$(<"$result_file")"
             built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
             repository="${release_image%:*}"
             docker buildx imagetools create --tag "$repository:latest" "$built_image"
           else
-            build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-build.time \
-              --build-concurrency=0 "${profile_args[@]}" -t latest -q)"
+            result_file="$RUNNER_TEMP/skaffold-build.json"
+            COSCENE_IMAGE_TAG="$TAG" build_with_result_file "$result_file" skaffold-build.time \
+              --build-concurrency=0 "${profile_args[@]}" -t latest
+            build_result="$(<"$result_file")"
             built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
             if [[ "$TAG" != 'latest' ]]; then
-              build_result="$(COSCENE_IMAGE_TAG="$TAG" run_skaffold_build skaffold-release-build.time \
-                --build-concurrency=0 "${profile_args[@]}" -q)"
+              result_file="$RUNNER_TEMP/skaffold-release-build.json"
+              COSCENE_IMAGE_TAG="$TAG" build_with_result_file "$result_file" skaffold-release-build.time \
+                --build-concurrency=0 "${profile_args[@]}"
+              build_result="$(<"$result_file")"
               built_image="$(jq -r '.builds[0].tag' <<< "$build_result")"
             fi
           fi
