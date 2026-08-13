@@ -46,6 +46,8 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build and push images
         id: build-and-push
+        env:
+          BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
         run: |
           skaffold build --build-concurrency=0 -t latest
           if [[ ${{ github.event_name }} == 'release' || ${{ github.event_name }} == 'prerelease' ]]; then
