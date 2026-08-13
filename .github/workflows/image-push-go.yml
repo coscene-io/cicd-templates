@@ -68,6 +68,7 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         env:
+          BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
           IMAGE_TAG: ${{ inputs.tag }}
         run: |
           cd ${{ inputs.workspace }}
