@@ -48,6 +48,8 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Docker build & push
         id: build-and-push
+        env:
+          BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
         run: |
           skaffold build --build-concurrency=0 -t latest
           result=$(skaffold build --build-concurrency=0 -q | jq '.builds[0].tag')

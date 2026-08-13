@@ -135,6 +135,7 @@ jobs:
       - name: Docker build & push
         id: build-and-push
         env:
+          BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
           GH_PACKAGES_ORG_TOKEN: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
           MEASURE_RESOURCES: ${{ inputs.measure_resources }}
           PROFILE: ${{ inputs.profile }}
