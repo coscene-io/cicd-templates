@@ -20,7 +20,7 @@ jobs:
         with:
           kubectl: '1.22.2'
       - name: VKE login
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v5
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.VOLCENGINE_DEV_KUBE_CONFIG }}
