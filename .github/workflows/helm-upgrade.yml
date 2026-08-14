@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 1
     steps:
       - name: AKS login
-        uses: azure/k8s-set-context@v3
+        uses: azure/k8s-set-context@v5
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.AZURE_KUBE_CONFIG }}
