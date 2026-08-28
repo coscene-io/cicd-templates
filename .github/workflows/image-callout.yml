@@ -3,6 +3,11 @@ name: Image Callout
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: gcp
       project:
         description: 'the name of project to be built and the corresponding image'
         required: true
@@ -17,7 +22,7 @@ env:
 
 jobs:
   callout:
-    runs-on: [gcp]
+    runs-on: ${{ inputs.runner }}
     env:
       TAG: ${{ inputs.tag }}
     timeout-minutes: 1

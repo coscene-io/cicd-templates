@@ -3,6 +3,11 @@ name: Go build
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: gcp
       workspace:
         description: go module workspace
         required: false
@@ -31,7 +36,7 @@ on:
 
 jobs:
   build:
-    runs-on: [gcp]
+    runs-on: ${{ inputs.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
