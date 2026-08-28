@@ -3,6 +3,11 @@ name: Push image build by yarn
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: ubuntu-latest
       project:
         description: "the name of project to be built and the corresponding image"
         required: true
@@ -18,7 +23,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     env:
       BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
       BUF_BUILD_TOKEN: ${{ secrets.BUF_BUILD_TOKEN }}

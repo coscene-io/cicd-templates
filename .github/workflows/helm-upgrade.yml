@@ -4,6 +4,11 @@ name: Helm Upgrade
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: gcp
       sub-chart:
         description: 'the name of sub-chart to be upgraded'
         required: true
@@ -11,7 +16,7 @@ on:
 
 jobs:
   helm-upgrade:
-    runs-on: [gcp]
+    runs-on: ${{ inputs.runner }}
     timeout-minutes: 1
     steps:
       - name: AKS login

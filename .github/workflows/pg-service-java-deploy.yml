@@ -3,6 +3,11 @@ name: Java deploy with PG
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: ubuntu-latest
       project:
         description: 'the name of project to be built and the corresponding image'
         required: true
@@ -22,7 +27,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     outputs:
       tag: ${{ steps.build-and-push.outputs.TAG }}
     services:
