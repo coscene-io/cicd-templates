@@ -24,7 +24,7 @@ on:
         description: "the runner to use, e.g. ubuntu-latest or 4c-16g"
         required: false
         type: string
-        default: ubuntu-latest
+        default: cos-m
       node_heap_mb:
         description: "maximum Node.js old-space heap in MiB"
         required: false

@@ -7,7 +7,7 @@ on:
         description: "Runner label to run on"
         required: false
         type: string
-        default: ubuntu-latest
+        default: cos-m
       deployment-name:
         description: 'the name of deployment to be upgraded'
         required: true

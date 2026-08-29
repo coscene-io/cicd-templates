@@ -7,7 +7,7 @@ on:
         description: "Runner label to run on"
         required: false
         type: string
-        default: ubuntu-latest
+        default: cos-m
       project:
         description: "the name of project to be built and the corresponding image"
         required: true
