@@ -7,7 +7,7 @@ on:
         description: "Runner label to run on"
         required: false
         type: string
-        default: gcp
+        default: cos-m
       workspace:
         description: go module workspace
         required: false
