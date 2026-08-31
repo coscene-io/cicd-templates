@@ -39,7 +39,7 @@ jobs:
         run: |
           helm upgrade -n coscene --reuse-values coscene coscene/coscene --set ${{ inputs.sub-chart }}.rollout=$GITHUB_SHA
       - name: Notification to Feishu
-        uses: coscene-io/cicd-templates/.github/actions/feishu-notify@824434d6b2fc762f55f112adec821a36ac161b46
+        uses: coscene-io/cicd-templates/.github/actions/feishu-notify@main
         with:
           webhook-url: ${{ secrets.FEISHU_BOT_WEBHOOK_URL_RHODE_ISLAND }}
           text: |
