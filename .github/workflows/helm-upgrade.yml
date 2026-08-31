@@ -8,7 +8,7 @@ on:
         description: "Runner label to run on"
         required: false
         type: string
-        default: gcp
+        default: cos-m
       sub-chart:
         description: 'the name of sub-chart to be upgraded'
         required: true
