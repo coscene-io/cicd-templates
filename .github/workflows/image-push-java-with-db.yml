@@ -60,8 +60,23 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         with:
           skaffold: '2.3.1'
+      # buildkitd (docker-container driver) takes env ONLY from buildx
+      # driver-opts; the runner's and dockerd's proxy never reach it, so a CN
+      # push from a coScene CI guest went direct until this step. The guests
+      # export CI_IMAGE_PROXY (the lane image traffic rides); elsewhere it is
+      # empty and buildkitd runs without a proxy, as before. The NO_PROXY
+      # value carries commas, so buildx needs it quoted whole.
+      - name: Surface image-proxy env for buildkitd
+        run: |
+          echo "IMAGE_PROXY=${CI_IMAGE_PROXY:-}" >> "$GITHUB_ENV"
+          echo "IMAGE_NO_PROXY=${NO_PROXY:-}" >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: |
+            env.HTTP_PROXY=${{ env.IMAGE_PROXY }}
+            env.HTTPS_PROXY=${{ env.IMAGE_PROXY }}
+            "env.NO_PROXY=${{ env.IMAGE_NO_PROXY }},azurecr.io,docker.io,ghcr.io"
       - name: Build and push images
         id: build-and-push
         env:
