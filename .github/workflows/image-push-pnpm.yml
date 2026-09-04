@@ -16,7 +16,7 @@ on:
         required: false
         type: string
       pnpm_version:
-        description: "the pnpm version to install"
+        description: "the pnpm version to install (11 or newer)"
         required: false
         type: string
         default: ""
@@ -73,15 +73,15 @@ jobs:
         uses: actions/checkout@v7
       - name: Setup pnpm from packageManager
         if: ${{ inputs.build != '' && inputs.pnpm_version == '' }}
-        uses: pnpm/action-setup@v6
+        uses: pnpm/setup@v2
         with:
-          run_install: false
+          install: false
       - name: Setup pnpm from workflow input
         if: ${{ inputs.build != '' && inputs.pnpm_version != '' }}
-        uses: pnpm/action-setup@v6
+        uses: pnpm/setup@v2
         with:
           version: ${{ inputs.pnpm_version }}
-          run_install: false
+          install: false
       - name: Setup Node env with pnpm cache
         if: ${{ inputs.build != '' && inputs.package_manager_cache }}
         uses: actions/setup-node@v7
