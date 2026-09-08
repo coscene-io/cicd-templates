@@ -42,6 +42,7 @@ jobs:
       # setup-node because its `cache: yarn` needs `yarn` on PATH.
       - name: Enable yarn via corepack
         run: |
+          mkdir -p "$RUNNER_TEMP/corepack-bin"
           corepack enable --install-directory "$RUNNER_TEMP/corepack-bin" yarn
           echo "$RUNNER_TEMP/corepack-bin" >> "$GITHUB_PATH"
       - name: Setup Node env
