@@ -51,21 +51,25 @@ jobs:
           password: ${{ secrets.GH_PACKAGES_ORG_TOKEN }}
       # buildkitd (docker-container driver) takes env ONLY from buildx
       # driver-opts; the runner's and dockerd's proxy never reach it, so a CN
-      # push from a coScene CI guest went direct until this step. The guests
-      # export CI_IMAGE_PROXY (the lane image traffic rides); elsewhere it is
-      # empty and buildkitd runs without a proxy, as before. The NO_PROXY
-      # value carries commas, so buildx needs it quoted whole.
-      - name: Surface image-proxy env for buildkitd
+      # push from a coScene CI guest went direct until this step. Mirrors the
+      # recipe proven in coscene-io/runner-smoke image-push-e2e-probe.yml
+      # (cn-via-proxy, f6f2090): surface the guest's own proxy env into
+      # GITHUB_ENV (the env context does not see the ambient runner env) and
+      # hand it to buildkitd as env.* driver-opts. A guest without proxy env
+      # runs buildkitd without a proxy, as before. The NO_PROXY value carries
+      # commas, so buildx needs it quoted whole.
+      - name: Surface guest proxy env
         run: |
-          echo "IMAGE_PROXY=${CI_IMAGE_PROXY:-}" >> "$GITHUB_ENV"
-          echo "IMAGE_NO_PROXY=${NO_PROXY:-}" >> "$GITHUB_ENV"
+          echo "GUEST_HTTP_PROXY=${HTTP_PROXY:-}" >> "$GITHUB_ENV"
+          echo "GUEST_HTTPS_PROXY=${HTTPS_PROXY:-}" >> "$GITHUB_ENV"
+          echo "GUEST_NO_PROXY=${NO_PROXY:-}" >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
         with:
           driver-opts: |
-            env.HTTP_PROXY=${{ env.IMAGE_PROXY }}
-            env.HTTPS_PROXY=${{ env.IMAGE_PROXY }}
-            "env.NO_PROXY=${{ env.IMAGE_NO_PROXY }},azurecr.io,docker.io,ghcr.io"
+            env.HTTP_PROXY=${{ env.GUEST_HTTP_PROXY }}
+            env.HTTPS_PROXY=${{ env.GUEST_HTTPS_PROXY }}
+            "env.NO_PROXY=${{ env.GUEST_NO_PROXY }},azurecr.io,docker.io,ghcr.io"
       - name: Docker build & push
         id: build-and-push
         env:
