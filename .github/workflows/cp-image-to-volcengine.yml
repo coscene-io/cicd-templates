@@ -3,6 +3,11 @@ name: Copy image to volcengine
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "Runner label to run on"
+        required: false
+        type: string
+        default: cos-m
       project:
         description: 'the name of project to be built and the corresponding image'
         required: true
@@ -18,10 +23,22 @@ env:
 
 jobs:
   cp-image-use-gh:
-    runs-on: ["aliyun", "X64"]
-    timeout-minutes: 5
+    runs-on: ${{ inputs.runner }}
+    # Both registries sit in China and a cos-m guest reaches them over its CN
+    # egress line, which uploads at ~2.4 MB/s; a large image takes minutes.
+    timeout-minutes: 15
     continue-on-error: true
     steps:
+      # Image bytes ride the lane the guest exports as CI_IMAGE_PROXY (osfiles
+      # hosts/_cos-ci/ci-guest.nix), and skopeo reads the proxy env, so this
+      # step points it there. Elsewhere the variable is empty and the copy
+      # runs as before.
+      - name: Route the copy through the image lane
+        run: |
+          if [ -n "${CI_IMAGE_PROXY:-}" ]; then
+            echo "HTTPS_PROXY=${CI_IMAGE_PROXY}" >> "$GITHUB_ENV"
+            echo "https_proxy=${CI_IMAGE_PROXY}" >> "$GITHUB_ENV"
+          fi
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
