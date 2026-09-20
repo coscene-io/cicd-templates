@@ -39,6 +39,14 @@ jobs:
             echo "HTTPS_PROXY=${CI_IMAGE_PROXY}" >> "$GITHUB_ENV"
             echo "https_proxy=${CI_IMAGE_PROXY}" >> "$GITHUB_ENV"
           fi
+      # skopeo copy refuses to run without a signature policy and a cos-m
+      # guest ships none. This is the policy every distro package installs:
+      # trust what the registry serves.
+      - name: Signature policy for skopeo
+        run: |
+          d="${XDG_CONFIG_HOME:-$HOME/.config}/containers"
+          mkdir -p "$d"
+          [ -f "$d/policy.json" ] || echo '{"default":[{"type":"insecureAcceptAnything"}]}' > "$d/policy.json"
       - name: Skopeo Copy
         uses: coscene-io/skopeo-copy-action@v1.0.0
         with:
