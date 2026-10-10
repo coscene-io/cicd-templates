@@ -31,10 +31,10 @@ on:
         type: number
         default: 16384
       package_manager_cache:
-        description: "whether actions/setup-node restores and saves the pnpm store"
+        description: "whether pnpm/setup restores and saves the pnpm store (verification results are cached independently)"
         required: false
         type: boolean
-        default: true
+        default: false
       setup_buildx:
         description: "whether to create a Docker Buildx builder before Skaffold"
         required: false
@@ -71,33 +71,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup pnpm from packageManager
-        if: ${{ inputs.build != '' && inputs.pnpm_version == '' }}
-        uses: pnpm/setup@v2
-        with:
-          install: false
-      - name: Setup pnpm from workflow input
-        if: ${{ inputs.build != '' && inputs.pnpm_version != '' }}
-        uses: pnpm/setup@v2
-        with:
-          version: ${{ inputs.pnpm_version }}
-          install: false
-      - name: Setup Node env with pnpm cache
-        if: ${{ inputs.build != '' && inputs.package_manager_cache }}
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: "pnpm"
-      - name: Setup Node env without package manager cache
-        if: ${{ inputs.build != '' && !inputs.package_manager_cache }}
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-      - name: Install Dependencies
+      - name: Setup Node, pnpm and dependencies
         if: ${{ inputs.build != '' }}
+        uses: pnpm/setup@v3
         env:
           PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@coscene-io":{"authToken":"${{ secrets.GH_PACKAGES_ORG_TOKEN }}"}}}'
-        run: pnpm install
+        with:
+          version: ${{ inputs.pnpm_version }}
+          # Honor the caller's pinned Node version; retain Node 24 when no file exists.
+          runtime: ${{ hashFiles('.node-version') != '' && 'node' || 'node@24' }}
+          node-version-file: ${{ hashFiles('.node-version') != '' && '.node-version' || 'false' }}
+          cache: ${{ inputs.package_manager_cache }}
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+          install: true
+          require-lockfile: true
       - name: Build
         if: ${{ inputs.build != '' }}
         env:
