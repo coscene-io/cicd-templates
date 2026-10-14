@@ -22,6 +22,11 @@ on:
         required: false
         type: string
         default: skaffold.yaml
+      copy-timeout-minutes:
+        description: Timeout for copying the image to Volcengine
+        required: false
+        type: number
+        default: 15
       volcengine:
         description: whether push image to volcengine container registry
         required: false
@@ -121,6 +126,7 @@ jobs:
     with:
       project: ${{ inputs.project }}
       tag: ${{ needs.build.outputs.tag }}
+      timeout-minutes: ${{ inputs.copy-timeout-minutes }}
     secrets: inherit
 
   callout:

@@ -3,14 +3,16 @@ on:
   pull_request:
     paths:
       - '.github/workflows/image-push-go.yml'
+      - '.github/workflows/cp-image-to-volcengine.yml'
       - '.github/workflows/template-contract.yml'
-      - 'tests/test_skaffold_file.py'
+      - 'tests/test_*.py'
   push:
     branches: [main]
     paths:
       - '.github/workflows/image-push-go.yml'
+      - '.github/workflows/cp-image-to-volcengine.yml'
       - '.github/workflows/template-contract.yml'
-      - 'tests/test_skaffold_file.py'
+      - 'tests/test_*.py'
 jobs:
   skaffold-file:
     runs-on: ubuntu-latest

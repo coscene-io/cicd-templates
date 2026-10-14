@@ -13,3 +13,8 @@ jobs:
       skaffold-file: skaffold.analysis.yaml
     secrets: inherit
 ```
+
+`copy-timeout-minutes` optionally increases the Volcengine copy job budget for
+large images (default `15`). For example, GPU image callers can set it to `45`.
+It is forwarded to `cp-image-to-volcengine.yml` as `timeout-minutes`; direct
+callers of that workflow retain the same 15-minute default.
