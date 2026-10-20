@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/image-push-go.yml'
+      - '.github/workflows/image-push-pnpm.yml'
       - '.github/workflows/cp-image-to-volcengine.yml'
       - '.github/workflows/template-contract.yml'
       - 'tests/test_*.py'
@@ -10,6 +11,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/image-push-go.yml'
+      - '.github/workflows/image-push-pnpm.yml'
       - '.github/workflows/cp-image-to-volcengine.yml'
       - '.github/workflows/template-contract.yml'
       - 'tests/test_*.py'

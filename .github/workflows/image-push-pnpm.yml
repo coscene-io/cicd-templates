@@ -15,6 +15,11 @@ on:
         description: "the pnpm script name to build the project"
         required: false
         type: string
+      package:
+        description: "optional pnpm script to assemble the runtime package after build"
+        required: false
+        type: string
+        default: ""
       pnpm_version:
         description: "the pnpm version to install (11 or newer)"
         required: false
@@ -72,7 +77,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup Node, pnpm and dependencies
-        if: ${{ inputs.build != '' }}
+        if: ${{ inputs.build != '' || inputs.package != '' }}
         uses: pnpm/setup@v3
         env:
           PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@coscene-io":{"authToken":"${{ secrets.GH_PACKAGES_ORG_TOKEN }}"}}}'
@@ -99,6 +104,22 @@ jobs:
             /usr/bin/time -v -o "$RUNNER_TEMP/pnpm-build.time" pnpm run "$BUILD_SCRIPT"
           else
             pnpm run "$BUILD_SCRIPT"
+          fi
+      # pnpm deploy can need private registry metadata to validate its pruned
+      # lockfile even after a frozen install. Keep this auth out of Build.
+      - name: Package runtime
+        if: ${{ inputs.package != '' }}
+        env:
+          PACKAGE_SCRIPT: ${{ inputs.package }}
+          MEASURE_RESOURCES: ${{ inputs.measure_resources }}
+          PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@coscene-io":{"authToken":"${{ secrets.GH_PACKAGES_ORG_TOKEN }}"}}}'
+        run: |
+          set -euo pipefail
+
+          if [[ "$MEASURE_RESOURCES" == 'true' && -x /usr/bin/time ]]; then
+            /usr/bin/time -v -o "$RUNNER_TEMP/pnpm-package.time" pnpm run "$PACKAGE_SCRIPT"
+          else
+            pnpm run "$PACKAGE_SCRIPT"
           fi
       - name: Set up CD tools
         uses: coscene-io/setup-cd-tools@v2.1.1
