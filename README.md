@@ -30,3 +30,7 @@ its production dependency closure with `package: gidle:package:release`.
 `pnpm deploy` reuses the installed store but may need online registry metadata
 for its pruned lockfile's supply-chain checks; it is not guaranteed to work
 with `--offline`. Resource measurement records `pnpm-package.time` separately.
+
+The pnpm setup step sets `NODE_USE_ENV_PROXY=1` so its Node.js `fetch`
+downloader honors the runner's `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY`
+settings when fetching the pnpm executable.

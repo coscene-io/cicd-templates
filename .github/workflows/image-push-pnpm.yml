@@ -80,6 +80,8 @@ jobs:
         if: ${{ inputs.build != '' || inputs.package != '' }}
         uses: pnpm/setup@v3
         env:
+          # The pnpm binary downloader uses Node fetch, which needs proxy opt-in.
+          NODE_USE_ENV_PROXY: '1'
           PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@coscene-io":{"authToken":"${{ secrets.GH_PACKAGES_ORG_TOKEN }}"}}}'
         with:
           version: ${{ inputs.pnpm_version }}
